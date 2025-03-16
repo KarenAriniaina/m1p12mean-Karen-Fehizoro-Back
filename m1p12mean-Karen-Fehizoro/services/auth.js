@@ -6,7 +6,7 @@ const bcrypt = require('bcryptjs');
 
 async function login(email, mdp, type) {
     try {
-        if (!email && !mdp) throw new Error("Veuillez tout remplir");
+        if (!email || !mdp) throw new Error("Veuillez tout remplir");
         else {
             let pers;
             // Admin

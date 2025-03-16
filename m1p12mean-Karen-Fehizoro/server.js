@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const { authenticateToken } = require('./middlewares/AuthMiddleware');
 
 require('dotenv').config();
 const app = express();
@@ -40,7 +41,7 @@ app.use('/', require('./routes/auth'));
 app.use('/articles', require('./routes/articleRoutes'));
 app.use('/clients', require('./routes/clientRoutes'));
 app.use('/managers', require('./routes/managerRoutes'));
-app.use('/services', require('./routes/serviceRoutes'));
+app.use('/services',authenticateToken, require('./routes/serviceRoutes'));
 app.use('/packPromoServices', require('./routes/packPromoServiceRoutes'));
 app.use('/mecanicien', require('./routes/mecanicienRoutes'));
 app.use('/tacheMecanicien', require('./routes/tacheMecanicienRoutes'));
