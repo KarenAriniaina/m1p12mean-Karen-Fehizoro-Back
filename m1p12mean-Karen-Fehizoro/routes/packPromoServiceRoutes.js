@@ -9,8 +9,8 @@ const upload = multer({ storage });
 const { ListePack, ArreterPack, ModifierPackService, SupprimerPack, creerPackService } = require('../services/pack');
 
 router.post('/', upload.array('images'), async (req, res) => {
-    const { nom, services, dd, df, tarif } = req.body;
-    const response = await creerPackService(nom, services, dd, df, tarif, req.files);
+    const { nom, services, dd, df, tarif, idservice } = req.body;
+    const response = await creerPackService(nom, services, dd, df, tarif, idservice, req.files);
     res.status(response.status).json({
         message: response.error,
         pack: response.pack
@@ -18,7 +18,7 @@ router.post('/', upload.array('images'), async (req, res) => {
 });
 
 router.get('/', async (req, res) => {
-    const { type, dd, df, nom, statut } = req.body;
+    const { type, dd, df, nom, statut } = req.query;
     const response = await ListePack(type, dd, df, nom, statut);
     res.status(response.status).json({
         message: response.error,
@@ -35,7 +35,7 @@ router.post('/ArreterPack/:id', async (req, res) => {
     })
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', upload.array('images'), async (req, res) => {
     const { type, nom, services, dd, df, tarif, existingphoto } = req.body;
     const response = await ModifierPackService(req.params.id, type, nom, services, dd, df, tarif, existingphoto, req.files);
     res.status(response.status).json({

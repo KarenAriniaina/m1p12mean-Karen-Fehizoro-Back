@@ -54,8 +54,16 @@ PackPromoServiceSchema.pre('save', async function (next) {
         return next(new Error('Le tarif saisi est inférieur ou égal à 0'));
     }
 
-    const now = Date.now(); // Current timestamp
+    if (this.service.length == 0) {
+        if (this.idservice == 0) return next(new Error('Aucun service saisi pour le pack '));
+        else return next(new Error('Aucun service saisi pour la promo'));
+    }
 
+    const moment = require('moment-timezone');
+
+    const now = moment(new Date()).tz(process.env.TZ || 'UTC').format('YYYY-MM-DD HH:mm:ss');
+    this.dateDebut = moment(this.dateDebut).tz(process.env.TZ || 'UTC').format('YYYY-MM-DD HH:mm:ss');
+    this.dateFin = moment(this.dateFin).tz(process.env.TZ || 'UTC').format('YYYY-MM-DD HH:mm:ss');
     // Validation rules
     if (this.dateDebut < now) {
         return next(new Error("La date de début saisie est inférieure à la date en cours"));
@@ -77,8 +85,8 @@ PackPromoServiceSchema.pre('save', async function (next) {
         ]
     });
     if ((existingPack && !this._id) || (existingPack && this._id && this._id != existingPack._id)) {
-        if (this.idservice == 0) next(new Error("Un pack est déjà actif avec le nom saisi"));
-        else next(new Error("Un promo est déjà actif avec le nom saisi"));
+        if (this.idservice == 0) return next(new Error("Un pack est déjà actif avec le nom saisi"));
+        else return next(new Error("Un promo est déjà actif avec le nom saisi"));
 
     }
     next();

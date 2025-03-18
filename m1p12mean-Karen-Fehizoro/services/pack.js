@@ -21,22 +21,19 @@ async function envoiePhotoCloud(deletedImages, newphoto) {
                 newimage.push(result);
             }
         } catch (error) {
-            console.log(error.message);
             throw new Error("Erreur lors de l'envoi des photos");
         }
     }
     return newimage;
 }
 
-async function creerPackService(nom, services, dd, df, tarif, photos) {
+async function creerPackService(nom, services, dd, df, tarif, idservice, photos) {
     let pack = null;
     let status = 201;
     let error = '';
     try {
-        services=JSON.parse(services)
         if (!nom || !services || !dd || !df || !tarif) throw new Error("Veuillez tout remplir");
-        let idservice = 0;
-        if (services.length == 1) idservice = services[0]._id
+        services = JSON.parse(services);
         pack = new PackPromoService({
             nom: nom,
             service: services,
@@ -66,10 +63,11 @@ async function ModifierPackService(id, type, nom, services, dd, df, tarif, exist
     try {
         if (!id) throw new Error(`Aucun ${type} à modifier`);
         if (!nom || !services || !dd || !df || !tarif) throw new Error("Veuillez tout remplir");
+        services = JSON.parse(services)
         pack = await PackPromoService.findById({ _id: id });
         if (!pack) throw new Error(`Aucun ${type} à modifier avec l'id ${id}`);
         const existingImageUrls = existingphoto ? JSON.parse(existingphoto) : [];
-        const deletedImages = servamodif.photo.filter(url => !existingImageUrls.includes(url));
+        const deletedImages = pack.photo.filter(url => !existingImageUrls.includes(url));
         const newimages = await envoiePhotoCloud(deletedImages, newphoto);
         const updatedImages = [...existingImageUrls, ...newimages];
         pack.nom = nom;
@@ -138,10 +136,30 @@ async function ListePack(type, dd, df, nom, statut) {
     let error = '';
     try {
         let query = {};
-
         if (type == 0) query.idservice = { $ne: 0 }
-        if (dd) query.dateDebut = { $gte: dd };
-        if (df) query.dateFin = { $lte: df };
+        else if (type == 1) query.idservice = 0;
+        if (dd) {
+            query.$expr = {
+                $gte: [
+                    { $dateToString: { format: "%Y-%m-%d", date: "$dateDebut" } },
+                    dd
+                ]
+            };
+        }
+
+        if (df) {
+            query.$expr = {
+                $and: [
+                    query.$expr || {},
+                    {
+                        $lte: [
+                            { $dateToString: { format: "%Y-%m-%d", date: "$dateFin" } },
+                            df
+                        ]
+                    }
+                ]
+            };
+        }
         if (nom) query.nom = { $regex: nom, $options: 'i' };
         if (statut) query.statut = statut;
         pack = await PackPromoService.find(query);

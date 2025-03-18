@@ -28,7 +28,6 @@ async function CreationService(nom, tarif, estimation, nbrmeca, filesphoto) {
                     imageUrls.push(result);
                 }
             } catch (error) {
-                console.log(error.message);
                 throw new Error("Erreur lors de l'envoi des photos");
             }
         }
@@ -78,7 +77,6 @@ async function ModificationService(id, nom, tarif, estimation, nbrmeca, existing
                     newimage.push(result);
                 }
             } catch (error) {
-                console.log(error.message);
                 throw new Error("Erreur lors de l'envoi des photos");
             }
         }

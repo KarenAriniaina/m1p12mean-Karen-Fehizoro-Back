@@ -9,7 +9,6 @@ router.post('/login', async (req, res) => {
     const log = await login(email, mdp, type)
     if (log.logged) {
         let { accessToken, refreshToken } = setToken(log.detailslog)
-        console.log(refreshToken)
         res.cookie("refreshToken", refreshToken, { httpOnly: true, secure: true });
         res.json({
             token: accessToken
