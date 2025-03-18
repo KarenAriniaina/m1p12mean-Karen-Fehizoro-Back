@@ -2,40 +2,55 @@ const express = require('express');
 const router = express.Router();
 const PackPromoService = require('../models/PackPromoService');
 
-router.post('/', async (req, res) => {
-    try {
-        const packPromoServices = new PackPromoService(req.body);
-        await packPromoServices.save();
-        res.status(201).json(packPromoServices);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
+const multer = require('multer');
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+const { ListePack, ArreterPack, ModifierPackService, SupprimerPack, creerPackService } = require('../services/pack');
+
+router.post('/', upload.array('images'), async (req, res) => {
+    const { nom, services, dd, df, tarif } = req.body;
+    const response = await creerPackService(nom, services, dd, df, tarif, req.files);
+    res.status(response.status).json({
+        message: response.error,
+        pack: response.pack
+    })
 });
 
 router.get('/', async (req, res) => {
- try {
-    const packPromoServices = await PackPromoService.find();
-    res.json(packPromoServices);
- } catch (error) {
-    res.status(500).json({ message: error.message });
- }
+    const { type, dd, df, nom, statut } = req.body;
+    const response = await ListePack(type, dd, df, nom, statut);
+    res.status(response.status).json({
+        message: response.error,
+        packs: response.pack
+    })
+});
+
+router.post('/ArreterPack/:id', async (req, res) => {
+    const { type } = req.body;
+    const response = await ArreterPack(req.params.id, type);
+    res.status(response.status).json({
+        message: response.error,
+        pack: response.pack
+    })
 });
 
 router.put('/:id', async (req, res) => {
-    try {
-        const packPromoServices = await PackPromoService.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        res.json(packPromoServices);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
+    const { type, nom, services, dd, df, tarif, existingphoto } = req.body;
+    const response = await ModifierPackService(req.params.id, type, nom, services, dd, df, tarif, existingphoto, req.files);
+    res.status(response.status).json({
+        message: response.error,
+        pack: response.pack
+    })
 });
-   
+
 router.delete('/:id', async (req, res) => {
-    try {
-        await PackPromoService.findByIdAndDelete(req.params.id);
-        res.json({ message: "Service supprimé" });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+    const { type } = req.body;
+    const response = await SupprimerPack(req.params.id, type);
+    res.status(response.status).json({
+        message: response.error,
+        pack: response.pack
+    })
 });
+
 module.exports = router;

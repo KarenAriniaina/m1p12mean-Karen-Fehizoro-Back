@@ -51,6 +51,8 @@ async function ModificationService(id, nom, tarif, estimation, nbrmeca, existing
     let servamodif = null;
     try {
         if (!nom || !tarif || !estimation || !nbrmeca) throw new Error("Veuillez tout remplir");
+        let servexistant = await Service.findOne({ nom: nom });
+        if (servexistant && servexistant._id !== id) throw new Error("Un service existe déjà avec le nom saisi");
         servamodif = await Service.findById({ _id: id });
         if (!servamodif) throw new Error(`Aucune service à modifier avec l'id ${id}`);
         let newimage = [];
@@ -106,10 +108,10 @@ async function SupprimerService(id) {
         servasuppr = await Service.findById({ _id: id });
         if (!servasuppr) throw new Error(`Aucun service à supprimer avec l'id ${id}`);
         // on efface ces photos de cloud
-        for (const imageUrl of servasuppr.photo) {
-            const publicId = imageUrl.split('/').pop().split('.')[0];
-            await cloudinary.uploader.destroy(`garazy/services/${publicId}`);
-        }
+        // for (const imageUrl of servasuppr.photo) {
+        //     const publicId = imageUrl.split('/').pop().split('.')[0];
+        //     await cloudinary.uploader.destroy(`garazy/services/${publicId}`);
+        // }
         await servasuppr.deleteOne();
     } catch (err) {
         status = 400;
