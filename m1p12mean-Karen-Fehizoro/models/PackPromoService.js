@@ -14,8 +14,9 @@ const ServiceSchema = new mongoose.Schema({
 
 const PackPromoServicetSchema = new mongoose.Schema({
     _id: Number,
-    prenom :  { type: String, required: true },
-    service : [{  type: [ServiceSchema], required: true }] ,
+    nom :  { type: String, required: true },
+    tarif: { type: Number, required: true, default: 0 },
+    service : {  type: [ServiceSchema], required: true } ,
     dateDebut:{ type: Date, required: true },
     dateFin: { type: Date, required: true  },
     idservice: { type: Number, required: true }
