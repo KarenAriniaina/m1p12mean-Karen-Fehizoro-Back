@@ -3,8 +3,7 @@ const AutoIncrement = require("mongoose-sequence")(mongoose);
 
 const DepenseExceptionnelleSchema  = new mongoose.Schema({
     _id: Number,
-    idMeca : { type: Number, required: true , default: 0},
-    libelle : { type: Number, required: true , default: 0 },
+    libelle : { type: String, required: true , default: 0 },
     total : { type: Number, required: true , default: 0 },
     date:{ type: Date, required: true }
 }, { timestamps: true });
