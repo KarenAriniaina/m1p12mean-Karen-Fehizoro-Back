@@ -61,10 +61,9 @@ PackPromoServiceSchema.pre('save', async function (next) {
 
     const moment = require('moment-timezone');
 
-    const now = moment(new Date()).tz(process.env.TZ || 'UTC').format('YYYY-MM-DD HH:mm:ss');
-    this.dateDebut = moment(this.dateDebut).tz(process.env.TZ || 'UTC').format('YYYY-MM-DD HH:mm:ss');
-    this.dateFin = moment(this.dateFin).tz(process.env.TZ || 'UTC').format('YYYY-MM-DD HH:mm:ss');
-    // Validation rules
+    const now = moment(new Date()).tz(process.env.TZ || 'UTC');
+    this.dateDebut = moment(this.dateDebut).tz(process.env.TZ || 'UTC');
+    this.dateFin = moment(this.dateFin).tz(process.env.TZ || 'UTC');
     if (this.dateDebut < now) {
         return next(new Error("La date de début saisie est inférieure à la date en cours"));
     }
