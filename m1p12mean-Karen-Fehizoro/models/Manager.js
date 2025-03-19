@@ -5,7 +5,7 @@ const ManagertSchema = new mongoose.Schema({
     _id: Number,
    
     prenom :  { type: String, required: true },
-    login :  { type: String, required: true },
+    login :  { type: String, required: true,unique: true },
     mdp :  { type: String, required: true },
 }, { timestamps: true });
 
