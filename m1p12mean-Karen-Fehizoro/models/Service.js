@@ -6,7 +6,8 @@ const ServicetSchema = new mongoose.Schema({
     nom : { type: String, required: true },
     tarif : { type: Number, required: true , default: 0 },
     estimation : { type: String, required: true },
-    nbrmeca : { type: Number, required: true, default: 0 }
+    nbrmeca : { type: Number, required: true, default: 0 },
+
 }, { timestamps: true });
 
 ServicetSchema.plugin(AutoIncrement, { id: "service_id_seq", inc_field: "_id" });
