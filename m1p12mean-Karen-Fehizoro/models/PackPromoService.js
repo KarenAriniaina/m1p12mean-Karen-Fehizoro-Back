@@ -31,7 +31,7 @@ const ServiceSchema = new mongoose.Schema({
 const PackPromoServiceSchema = new mongoose.Schema({
     _id: Number,
     nom: { type: String, required: true },
-    service: [{ type: [ServiceSchema], required: true }],
+    service: { type: [ServiceSchema], required: true },
     dateDebut: { type: Date, required: true },
     dateFin: { type: Date, required: true },
     idservice: { type: Number, required: true },
@@ -72,6 +72,10 @@ PackPromoServiceSchema.pre('save', async function (next) {
     }
     if (this.dateDebut >= this.dateFin) {
         return next(new Error("La date de fin saisie est inférieure à la date de début"));
+    }
+
+    if(this.idservice!=0){
+        if(this.service[0].tarif<=this.tarif) return next(new Error("Le prix saisi est supérieur au prix normal"));
     }
 
     const existingPack = await mongoose.model('PackPromoService').findOne({
