@@ -6,7 +6,7 @@ const ServiceSchema = new mongoose.Schema({
     _id: Number,
     nom: { type: String, required: true },
     tarif: { type: Number, required: true, default: 0 },
-    estimation: { type: String, required: true },
+    estimation: { type: String },
     nbrmeca: { type: Number, required: true, default: 0 }
 }, { timestamps: true });
 
@@ -21,6 +21,7 @@ const MecanicienSchema = new mongoose.Schema({
     email :  { type: String, required: true },
     numtel :  { type: String, required: true },
     adresse :  { type: String, required    : true },
+    photo :  { type: String },
     specialites: { type: [ServiceSchema], required    : true },
 }, { timestamps: true });
 
