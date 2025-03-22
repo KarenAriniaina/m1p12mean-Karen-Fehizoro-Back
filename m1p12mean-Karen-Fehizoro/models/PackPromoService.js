@@ -5,7 +5,7 @@ const Service = require('./Service')
 
 const ServiceSchema = new mongoose.Schema({
     _id: Number,
-    nom: { type: String, required: true, unique: true },
+    nom: { type: String, required: true },
 
     tarif: {
         type: Number,
@@ -88,7 +88,9 @@ PackPromoServiceSchema.pre('save', async function (next) {
         ]
     });
     if ((existingPack && !this._id) || (existingPack && this._id && this._id != existingPack._id)) {
-        if (this.idservice == 0) return next(new Error("Un pack est déjà actif avec le nom saisi"));
+        if (this.idservice == 0) {
+            if(existingPack.nom===this.nom)  return next(new Error("Un pack est déjà actif avec le nom saisi"));
+        }
         else return next(new Error("Un promo est déjà actif avec le nom saisi"));
 
     }
