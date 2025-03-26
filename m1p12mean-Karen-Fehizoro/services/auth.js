@@ -19,8 +19,8 @@ async function login(email, mdp, type) {
             } else {
                 pers = await Client.findOne({ email })
             }
-            if (!pers){
-                if(type == 0) throw new Error("Aucun manager trouvé avec le login saisi");
+            if (!pers) {
+                if (type == 0) throw new Error("Aucun manager trouvé avec le login saisi");
                 else throw new Error("Aucun utilisateur trouvé avec l'email saisie");
             }
             const isMatch = await bcrypt.compare(mdp, pers.mdp);
@@ -44,7 +44,7 @@ async function login(email, mdp, type) {
     }
 }
 
-async function createAdmin(login,pwd,prenom) {
+async function createAdmin(login, pwd, prenom) {
     try {
         const admin = await Manager.create({
             login: login,
@@ -52,19 +52,19 @@ async function createAdmin(login,pwd,prenom) {
             mdp: await HashMdp(pwd)
         });
         return {
-            "created":true,
+            "created": true,
             "admin": admin
         }
     } catch (error) {
         if (error.code === 11000) {
             return {
-                "created":false,
-                "error":"Login existant pour un manager"
+                "created": false,
+                "error": "Login existant pour un manager"
             }
         } else {
             return {
-                "created":false,
-                "error":error.message
+                "created": false,
+                "error": error.message
             }
         }
     }
@@ -75,4 +75,32 @@ async function HashMdp(mdp) {
     return await bcrypt.hash(mdp, salt); // Hash password
 }
 
-module.exports = { login,createAdmin };
+async function inscriptionClient(nom, mdp, email, tel, adresse) {
+    try {
+        if (!nom || !mdp || !email) throw new Error("Veuillez tout remplir");
+        let persemailexistant = await Client.findOne({ email: email })
+        if (persemailexistant) throw new Error("L'email saisie est déjà utilisée");
+        const cli = await Client.create({
+            prenom: nom,
+            mdp: await HashMdp(mdp),
+            email: email,
+            numtel: tel,
+            adresse: adresse
+        });
+        return {
+            "logged": true,
+            "detailslog": {
+                "id": cli._id,
+                "prenom": cli.prenom,
+                "role": 2
+            }
+        }
+    } catch (error) {
+        return {
+            "logged": false,
+            "error": error.message
+        }
+    }
+}
+
+module.exports = { login, createAdmin, inscriptionClient };
