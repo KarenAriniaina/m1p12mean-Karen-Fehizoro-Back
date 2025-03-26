@@ -13,7 +13,7 @@ const upload = multer({ storage });
 router.post('/', async (req, res) => {
     try {
         let infoMecanicien = req.body
-        console.log(infoMecanicien)
+        // console.log(infoMecanicien)
         infoMecanicien.mdp = await HashMdp(infoMecanicien.mdp)
         const mecaniciens = new Mecanicien(infoMecanicien);
         await mecaniciens.save();
@@ -68,7 +68,7 @@ router.delete('/:id', async (req, res) => {
 router.post('/modificationMecanicienAvecUploadPhoto', upload.single('image'), async (req, res) => {
     const {  id,nom,prenom,adresse,email,numtel,login , mdp ,nouveauMdp ,photoActuelle} = req.body;
     const specialites = JSON.parse(req.body.specialites);
-    console.log( id,nom,prenom,adresse,email,numtel,login , mdp, specialites ,nouveauMdp,photoActuelle)
+    // console.log( id,nom,prenom,adresse,email,numtel,login , mdp, specialites ,nouveauMdp,photoActuelle)
     const response = await uploadPhotoEtModificationMecanicien( id,nom,prenom,adresse,email,numtel,login , mdp, specialites , nouveauMdp ,photoActuelle,req.file); // req.file au lieu de req.files
     res.status(response.status).json({
         message: response.error,
@@ -83,49 +83,52 @@ async function uploadPhotoEtModificationMecanicien(id,nom,prenom,adresse,email,n
     let error = '';
     try {
 
-        mecanicienModif = new Mecanicien({
-            _id:id,
-            nom:nom ,
-            prenom:prenom ,
-            login:login ,
-            mdp:mdp ,
-            email:email ,
-            numtel:numtel ,
-            adresse:adresse ,
-            specialites:specialites ,
-            photo: photoActuelle
-        })
+        if(!nom || !prenom|| !adresse || !email|| !numtel || nom=="" || prenom==""|| adresse=="" || email==""|| numtel=="" ){
+            throw new Error("Erreur : il y a des champs vide!")
+        }
+            mecanicienModif = new Mecanicien({
+                _id:id,
+                nom:nom ,
+                prenom:prenom ,
+                login:login ,
+                mdp:mdp ,
+                email:email ,
+                numtel:numtel ,
+                adresse:adresse ,
+                specialites:specialites ,
+                photo: photoActuelle
+            })
 
-        let imageUrls = "";
-        if (filesphoto ) {
-            try {
-                
-                    const result = await new Promise((resolve, reject) => {
-                        cloudinary.uploader.upload_stream({ folder: 'garazy/mecaniciens' }, (error, result) => {
-                            if (error) reject(error);
-                            else resolve(result.secure_url);
-                        }).end(filesphoto.buffer);
-                    });
-                    imageUrls=result;
-                    mecanicienModif.photo = imageUrls;
-            } catch (error) {
-                throw new Error("Erreur lors de l'envoi des photos");
+            let imageUrls = "";
+            if (filesphoto ) {
+                try {
+                    
+                        const result = await new Promise((resolve, reject) => {
+                            cloudinary.uploader.upload_stream({ folder: 'garazy/mecaniciens' }, (error, result) => {
+                                if (error) reject(error);
+                                else resolve(result.secure_url);
+                            }).end(filesphoto.buffer);
+                        });
+                        imageUrls=result;
+                        mecanicienModif.photo = imageUrls;
+                } catch (error) {
+                    throw new Error("Erreur lors de l'envoi des photos");
+                }
             }
+            if(nouveauMdp && nouveauMdp!=""){
+                mecanicienModif.mdp = await HashMdp(nouveauMdp)
+            }
+            
+            await Mecanicien.findByIdAndUpdate(id, mecanicienModif, { new: true });
+        } catch (err) {
+            error = err.message;
+            status = 400
         }
-        if(nouveauMdp && nouveauMdp!=""){
-            mecanicienModif.mdp = await HashMdp(nouveauMdp)
+        return {
+            "status": status,
+            "error": error,
+            "mecanicien": mecanicienModif
         }
-        
-        await Mecanicien.findByIdAndUpdate(id, mecanicienModif, { new: true });
-    } catch (err) {
-        error = err.message;
-        status = 400
-    }
-    return {
-        "status": status,
-        "error": error,
-        "mecanicien": mecanicienModif
-    }
 }
 
 
