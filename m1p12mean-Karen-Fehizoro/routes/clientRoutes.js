@@ -1,42 +1,24 @@
 const express = require('express');
+const Service = require('../models/Service');
+const { ListePack } = require('../services/pack');
 const router = express.Router();
 
-const Client = require('../models/Client');
-
-router.post('/', async (req, res) => {
+router.get('/services', async (req, res) => {
     try {
-        const client = new Client(req.body);
-        await client.save();
-        res.status(201).json(client);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-});
-
-router.get('/', async (req, res) => {
- try {
-    const clients = await Client.find();
-    res.json(clients);
- } catch (error) {
-    res.status(500).json({ message: error.message });
- }
-});
-
-router.put('/:id', async (req, res) => {
-    try {
-        const article = await Article.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        res.json(article);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-});
-   
-router.delete('/:id', async (req, res) => {
-    try {
-        await Client.findByIdAndDelete(req.params.id);
-        res.json({ message: "Client supprimé" });
+        const services = await Service.find();
+        res.json(services);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 });
+
+router.get('/packs', async (req, res) => {
+    const { type, dd, df, nom, statut } = req.query;
+    const response = await ListePack(type, dd, df, nom, statut);
+    res.status(response.status).json({
+        message: response.error,
+        packs: response.pack
+    })
+});
+
 module.exports = router;
