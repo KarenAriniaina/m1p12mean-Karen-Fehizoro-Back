@@ -1,7 +1,7 @@
 const Service = require('../models/Service')
 const cloudinary = require('../config/cloudinary');
 
-async function CreationService(nom, tarif, estimation, nbrmeca, filesphoto) {
+async function CreationService(nom, tarif, estimation, nbrmeca, description, filesphoto) {
     let serv = null;
     let status = 201;
     let error = '';
@@ -13,7 +13,8 @@ async function CreationService(nom, tarif, estimation, nbrmeca, filesphoto) {
             nom: nom,
             tarif: tarif,
             estimation: estimation,
-            nbrmeca: nbrmeca
+            nbrmeca: nbrmeca,
+            description: description
         });
         let imageUrls = [];
         if (filesphoto && filesphoto.length > 0) {
@@ -44,14 +45,14 @@ async function CreationService(nom, tarif, estimation, nbrmeca, filesphoto) {
     }
 }
 
-async function ModificationService(id, nom, tarif, estimation, nbrmeca, existingphoto, newphoto) {
+async function ModificationService(id, nom, tarif, estimation, nbrmeca, description, existingphoto, newphoto) {
     let status = 200;
     let error = '';
     let servamodif = null;
     try {
         if (!nom || !tarif || !estimation || !nbrmeca) throw new Error("Veuillez tout remplir");
         let servexistant = await Service.findOne({ nom: nom });
-        if (servexistant && servexistant._id !== id) throw new Error("Un service existe déjà avec le nom saisi");
+        if (servexistant && servexistant._id.toString() !== id) throw new Error("Un service existe déjà avec le nom saisi");
         servamodif = await Service.findById({ _id: id });
         if (!servamodif) throw new Error(`Aucune service à modifier avec l'id ${id}`);
         let newimage = [];
@@ -85,6 +86,7 @@ async function ModificationService(id, nom, tarif, estimation, nbrmeca, existing
         servamodif.tarif = tarif;
         servamodif.estimation = estimation;
         servamodif.nbrmeca = nbrmeca;
+        servamodif.description = description;
         servamodif.photo = updatedImageUrls
         await servamodif.save()
     } catch (err) {
@@ -122,7 +124,7 @@ async function SupprimerService(id) {
     }
 }
 
-async function getOneService(id){
+async function getOneService(id) {
     let status = 200;
     let error = '';
     let serv = null;
@@ -137,7 +139,7 @@ async function getOneService(id){
         "status": status,
         "error": error,
         "service": serv
-    }   
+    }
 }
 
-module.exports = { CreationService, ModificationService, SupprimerService,getOneService }
+module.exports = { CreationService, ModificationService, SupprimerService, getOneService }

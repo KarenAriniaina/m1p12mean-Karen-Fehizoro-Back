@@ -27,7 +27,7 @@ async function envoiePhotoCloud(deletedImages, newphoto) {
     return newimage;
 }
 
-async function creerPackService(nom, services, dd, df, tarif, idservice, photos) {
+async function creerPackService(nom, services, dd, df, tarif, idservice, description, photos) {
     let pack = null;
     let status = 201;
     let error = '';
@@ -40,7 +40,8 @@ async function creerPackService(nom, services, dd, df, tarif, idservice, photos)
             dateDebut: dd,
             dateFin: df,
             idservice: idservice,
-            tarif: tarif
+            tarif: tarif,
+            description: description
         })
         let imageUrls = await envoiePhotoCloud([], photos);
         pack.photo = imageUrls;
@@ -56,7 +57,7 @@ async function creerPackService(nom, services, dd, df, tarif, idservice, photos)
     }
 }
 
-async function ModifierPackService(id, type, nom, services, dd, df, tarif, existingphoto, newphoto) {
+async function ModifierPackService(id, type, nom, services, dd, df, tarif, description, existingphoto, newphoto) {
     let pack = null;
     let status = 200;
     let error = '';
@@ -76,6 +77,7 @@ async function ModifierPackService(id, type, nom, services, dd, df, tarif, exist
         pack.dateFin = df;
         pack.tarif = tarif;
         pack.photo = updatedImages;
+        pack.description=description;
         await pack.save();
     } catch (err) {
         error = err.message;
