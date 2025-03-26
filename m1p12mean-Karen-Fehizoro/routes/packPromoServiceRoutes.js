@@ -7,10 +7,12 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 const { ListePack, ArreterPack, ModifierPackService, SupprimerPack, creerPackService } = require('../services/pack');
+const { envoiNotifPromo } = require('../services/notif');
 
 router.post('/', upload.array('images'), async (req, res) => {
-    const { nom, services, dd, df, tarif, idservice } = req.body;
+    const { nom, services, dd, df, tarif, idservice,notif } = req.body;
     const response = await creerPackService(nom, services, dd, df, tarif, idservice, req.files);
+    if(notif && response.status==201) envoiNotifPromo(response.pack)
     res.status(response.status).json({
         message: response.error,
         pack: response.pack
