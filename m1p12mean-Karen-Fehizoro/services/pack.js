@@ -18,7 +18,8 @@ async function envoiePhotoCloud(deletedImages, newphoto) {
                         else resolve(result.secure_url);
                     }).end(file.buffer);
                 });
-                newimage.push(result);
+                const resizedUrl = result.replace("/upload/", "/upload/w_820,h_480,c_fill/")
+                newimage.push(resizedUrl);
             }
         } catch (error) {
             throw new Error("Erreur lors de l'envoi des photos");

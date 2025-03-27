@@ -26,7 +26,8 @@ async function CreationService(nom, tarif, estimation, nbrmeca, description, fil
                             else resolve(result.secure_url);
                         }).end(file.buffer);
                     });
-                    imageUrls.push(result);
+                    const resizedUrl = result.replace("/upload/", "/upload/w_820,h_480,c_fill/")
+                    imageUrls.push(resizedUrl);
                 }
             } catch (error) {
                 throw new Error("Erreur lors de l'envoi des photos");
@@ -75,7 +76,8 @@ async function ModificationService(id, nom, tarif, estimation, nbrmeca, descript
                             else resolve(result.secure_url);
                         }).end(file.buffer);
                     });
-                    newimage.push(result);
+                    const resizedUrl = result.replace("/upload/", "/upload/w_820,h_480,c_fill/")
+                    newimage.push(resizedUrl);
                 }
             } catch (error) {
                 throw new Error("Erreur lors de l'envoi des photos");
