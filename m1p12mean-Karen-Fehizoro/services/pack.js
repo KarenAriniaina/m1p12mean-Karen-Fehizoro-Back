@@ -58,6 +58,24 @@ async function creerPackService(nom, services, dd, df, tarif, idservice, descrip
     }
 }
 
+async function getOnePack(id) {
+    let status = 200;
+    let error = '';
+    let pack = null;
+    try {
+        pack = await PackPromoService.findById({ _id: id });
+        if (!pack) throw new Error(`Aucun Pack trouvé avec l'id ${id}`);
+    } catch (err) {
+        status = 400;
+        error = err.message;
+    }
+    return {
+        "status": status,
+        "error": error,
+        "pack": pack
+    }
+}
+
 async function ModifierPackService(id, type, nom, services, dd, df, tarif, description, existingphoto, newphoto) {
     let pack = null;
     let status = 200;
@@ -177,4 +195,4 @@ async function ListePack(type, dd, df, nom, statut) {
     }
 }
 
-module.exports = { ListePack, ArreterPack, ModifierPackService, SupprimerPack, creerPackService }
+module.exports = { ListePack, ArreterPack, ModifierPackService, SupprimerPack, creerPackService, getOnePack }
