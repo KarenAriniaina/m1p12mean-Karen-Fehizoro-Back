@@ -144,4 +144,71 @@ async function getOneService(id) {
     }
 }
 
-module.exports = { CreationService, ModificationService, SupprimerService, getOneService }
+async function ListeServiceBooking() {
+    let serv = [];
+    let status = 200;
+    let error = '';
+    const today = new Date();
+    try {
+        serv = await Service.aggregate([
+            {
+                $lookup: {
+                    from: "packpromoservices",
+                    localField: "_id",
+                    foreignField: "idservice",
+                    as: "pack"
+                }
+            },
+            {
+                $addFields: {
+                    validPack: {
+                        $filter: {
+                            input: "$pack",  // Process the "pack" array
+                            as: "p",
+                            cond: {
+                                $and: [
+                                    { $lte: ["$$p.dateDebut", today] },
+                                    { $gte: ["$$p.dateFin", today] }, 
+                                    { $eq: [{ $size: "$$p.service" }, 1] },
+                                    { $eq: ["$$p.statut", 0] }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    promo: {
+                        $arrayElemAt: [
+                            {
+                                $sortArray: { input: "$validPack", sortBy: { dateDebut: 1 } }
+                            },
+                            0 
+                        ]
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    nom: 1,
+                    tarif: 1,
+                    photo: 1,
+                    promo: 1 
+                }
+            }
+        ]);
+
+    } catch (err) {
+        error = err.message;
+        status = 400
+    }
+    return {
+        "status": status,
+        "error": error,
+        "services": serv
+    }
+}
+
+module.exports = { CreationService, ModificationService, SupprimerService, getOneService, ListeServiceBooking }

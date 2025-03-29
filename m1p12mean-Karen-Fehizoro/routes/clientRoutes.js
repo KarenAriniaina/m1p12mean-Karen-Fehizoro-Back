@@ -1,7 +1,7 @@
 const express = require('express');
 const Service = require('../models/Service');
 const { ListePack, getOnePack } = require('../services/pack');
-const { getOneService } = require('../services/service');
+const { getOneService, ListeServiceBooking } = require('../services/service');
 const router = express.Router();
 
 router.get('/services', async (req, res) => {
@@ -11,6 +11,14 @@ router.get('/services', async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
+});
+
+router.get('/services/booking', async (req, res) => {
+    const response = await ListeServiceBooking();
+    res.status(response.status).json({
+        message: response.error,
+        service: response.services
+    })
 });
 
 router.get('/service/:id', async (req, res) => {
