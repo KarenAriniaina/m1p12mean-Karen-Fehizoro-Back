@@ -1,13 +1,51 @@
 const mongoose = require("mongoose");
-const PackPromoService = require("./PackPromoService");
-const Service = require("./Service");
+
 const AutoIncrement = require("mongoose-sequence")(mongoose);
+
+const ServiceSchema = new mongoose.Schema({
+    _id: Number,
+    nom: { type: String, required: true},   
+
+    tarif: {
+        type: Number,
+        required: true
+    },
+
+    estimation: {
+        type: Number,
+        required: true
+    },
+
+    nbrmeca: {
+        type: Number,
+        required: true
+    },
+    photo: {
+        type: [String],
+        default: []
+    }
+}, { timestamps: true });
+
+const PackPromoServiceSchema = new mongoose.Schema({
+    _id: Number,
+    nom: { type: String, required: true },
+    service: { type: [ServiceSchema], required: true },
+    dateDebut: { type: Date, required: true },
+    dateFin: { type: Date, required: true },
+    idservice: { type: Number, required: true },
+    tarif: { type: Number, required: true, default: 0 },
+    statut: { type: Number, default: 0 },
+    photo: {
+        type: [String],
+        default: []
+    }
+}, { timestamps: true });
 
 const FactureSchema = new mongoose.Schema({
     _id: Number,
     idClient :  { type: Number, required: true },
-    pack :  { type: [PackPromoService], required: true , default : [] },
-    services :  { type: [Service], required: true, default : []},
+    pack :  { type: [PackPromoServiceSchema], required: true , default : [] },
+    services :  { type: [ServiceSchema], required: true, default : []},
     total :  { type: Number, required: true , default : 0 },
 }, { timestamps: true });
 

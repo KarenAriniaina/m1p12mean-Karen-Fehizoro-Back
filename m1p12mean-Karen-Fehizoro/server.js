@@ -50,4 +50,5 @@ app.use('/recetteExceptionnelle', require('./routes/recetteExceptionnelle'));
 app.use('/depotEtRetrait', require('./routes/DepotEtRetrait'));
 app.use('/testProposition', require('./routes/testProposition'));
 app.use('/heureDeTravail', require('./routes/heureDeTravail'));
+app.use('/facture', require('./routes/factureRoutes'));
 app.listen(PORT, () => console.log(`Serveur démarré sur le port${PORT}`));
