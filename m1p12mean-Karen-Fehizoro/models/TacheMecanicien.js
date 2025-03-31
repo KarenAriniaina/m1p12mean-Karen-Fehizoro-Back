@@ -9,7 +9,8 @@ const TacheMecanicienSchema  = new mongoose.Schema({
     dateDebut:{ type: Date, required: true },
     dateFin: { type: Date, required: false  },
     status: { type: Number, required: true  },
-    estimation: { type: String, required: true  }
+    estimation: { type: Date, required: true  },
+    idDemande : {type: Number ,required: false , default: 0 }
 }, { timestamps: true });
 
 TacheMecanicienSchema.plugin(AutoIncrement, { id: "tacheMecanicien_id_seq", inc_field: "_id" });
