@@ -77,7 +77,7 @@ router.get('/', async (req, res) => {
     // resultatFinitionServiceDemande =await RecuperationToutPropositionAPartirDateSaisie("2025-03-08" , 3 ,listeService)
     // console.log(resultatFinitionServiceDemande)
     let informationSurLeDemande ={
-        listePack:{
+        listePack:[{
             service : [
                 { _id : 3 , estimation:30 , nbrmeca :2} ,
                 { _id : 3 , estimation:15 , nbrmeca :1} ,
@@ -85,6 +85,15 @@ router.get('/', async (req, res) => {
                 { _id : 3 , estimation:10 , nbrmeca :2} ,
             ] ,
         } ,
+        {
+            service : [
+                { _id : 3 , estimation:30 , nbrmeca :2} ,
+                { _id : 3 , estimation:15 , nbrmeca :1} ,
+                { _id : 3 , estimation:10 , nbrmeca :1} ,
+                { _id : 3 , estimation:10 , nbrmeca :2} ,
+            ] ,
+        }  
+        ],
         listeService: [
             { _id : 3 , estimation:30 , nbrmeca :2} ,
             { _id : 3 , estimation:15 , nbrmeca :1} ,
@@ -96,9 +105,9 @@ router.get('/', async (req, res) => {
     // console.log(informationSurLeDemande.listeService)
     
 
-    // await TraitementPourLaRecuperationProposition( informationSurLeDemande , "2025-03-08")
+    await TraitementPourLaRecuperationProposition( informationSurLeDemande , "2025-03-08")
 
-    await ChangerLesStatusDesTaches(90)
+    // await ChangerLesStatusDesTaches(90)
     // console.log("Dd : "+resultatFinitionServiceDemande.dateDebutDisponibiliteMecanicien+"  ----- Df: "+resultatFinitionServiceDemande.dateFinDisponibiliteMecanicien)
     // console.log(resultatFinitionServiceDemande.listeMecanicien)
 

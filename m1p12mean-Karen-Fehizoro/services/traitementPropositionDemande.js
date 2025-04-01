@@ -437,11 +437,12 @@ function regroupeLesPacksEtLesServicesEnTableauDeService(listePack , listeServic
     for(let i = 0 ; i<listeService.length ; i++){
         listeToutService.push(listeService[i])
     }
-    for(let i = 0 ; i<listePack.service.length ; i++){
-        listeToutService.push(listePack.service[i])
+    for(let j = 0 ; j<listePack.length ; j++){
+        for(let i = 0 ; i<listePack[j].service.length ; i++){
+            listeToutService.push(listePack[j].service[i])
+        }
     }
     for( i = 0 ; i<listeToutService.length ; i++){
-        
         if(map.has(listeToutService[i]._id) == false){
             map.set(listeToutService[i]._id, listeToutService[i]);
         }
@@ -484,26 +485,27 @@ function relierLesPropositionAuInformationDeLaDemande(mapPropositionParService ,
         let idService = copieInformationSurLeDemande.listeService[i]._id
         let propositionPourLeService = mapPropositionParService.get(idService)
         copieInformationSurLeDemande.listeService[i].proposition = propositionPourLeService
-        // console.log(copieInformationSurLeDemande.listeService[i])
     }
-    for(let i = 0 ; i<copieInformationSurLeDemande.listePack.service.length ; i++){
+    for(let j = 0 ; j<copieInformationSurLeDemande.listePack.length ; j++){
+        for(let i = 0 ; i<copieInformationSurLeDemande.listePack[j].service.length ; i++){
+            let idService =copieInformationSurLeDemande.listePack[j].service[i]._id
+            let propositionPourLeService = mapPropositionParService.get(idService)
+            copieInformationSurLeDemande.listePack[j].service[i].proposition = propositionPourLeService
 
-        let idService =copieInformationSurLeDemande.listePack.service[i]._id
-        let propositionPourLeService = mapPropositionParService.get(idService)
-        copieInformationSurLeDemande.listePack.service[i].proposition = propositionPourLeService
-        // console.log(copieInformationSurLeDemande.listePack.service[i])
-
+        }
     }
     return copieInformationSurLeDemande
 
 }
 
 async function TraitementPourLaRecuperationProposition( informationSurLeDemande , dateSaisie){
+    
     let resultat = null;
     let status = 201;
-    let error = '';
+    let error = ''; 
     try{
         demande = await new Demande().save()
+        console.log(demande)
         idDemande = demande._id
         listeToutLesServices=regroupeLesPacksEtLesServicesEnTableauDeService(informationSurLeDemande.listePack , informationSurLeDemande.listeService)
         console.log(listeToutLesServices)
