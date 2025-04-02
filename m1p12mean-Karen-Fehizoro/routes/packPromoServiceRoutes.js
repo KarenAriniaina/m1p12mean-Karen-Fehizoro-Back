@@ -10,9 +10,9 @@ const { ListePack, ArreterPack, ModifierPackService, SupprimerPack, creerPackSer
 const { envoiNotifPromo } = require('../services/notif');
 
 router.post('/', upload.array('images'), async (req, res) => {
-    const { nom, services, dd, df, tarif, idservice,notif } = req.body;
-    const response = await creerPackService(nom, services, dd, df, tarif, idservice, req.files);
-    if(notif && response.status==201) envoiNotifPromo(response.pack)
+    const { nom, services, dd, df, tarif, idservice, notif, description } = req.body;
+    const response = await creerPackService(nom, services, dd, df, tarif, idservice, description, req.files);
+    if (notif && response.status == 201) envoiNotifPromo(response.pack)
     res.status(response.status).json({
         message: response.error,
         pack: response.pack
@@ -38,8 +38,8 @@ router.post('/ArreterPack/:id', async (req, res) => {
 });
 
 router.put('/:id', upload.array('images'), async (req, res) => {
-    const { type, nom, services, dd, df, tarif, existingphoto } = req.body;
-    const response = await ModifierPackService(req.params.id, type, nom, services, dd, df, tarif, existingphoto, req.files);
+    const { type, nom, services, dd, df, tarif, description, existingphoto } = req.body;
+    const response = await ModifierPackService(req.params.id, type, nom, services, dd, df, tarif, description, existingphoto, req.files);
     res.status(response.status).json({
         message: response.error,
         pack: response.pack

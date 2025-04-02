@@ -9,8 +9,8 @@ const upload = multer({ storage });
 const { CreationService, getOneService, ModificationService, SupprimerService } = require('../services/service');
 
 router.post('/', upload.array('images'), async (req, res) => {
-    const { nom, tarif, estimation, nbrmeca } = req.body;
-    const response = await CreationService(nom, tarif, estimation, nbrmeca, req.files)
+    const { nom, tarif, estimation, nbrmeca,description } = req.body;
+    const response = await CreationService(nom, tarif, estimation, nbrmeca,description, req.files)
     res.status(response.status).json({
         message: response.error,
         service: response.service
@@ -35,8 +35,8 @@ router.get('/:id', async (req, res) => {
 });
 
 router.put('/:id', upload.array('images'), async (req, res) => {
-    const { nom, tarif, estimation, nbrmeca, existing } = req.body;
-    const response = await ModificationService(req.params.id, nom, tarif, estimation, nbrmeca, existing, req.files)
+    const { nom, tarif, estimation, nbrmeca, description,existing } = req.body;
+    const response = await ModificationService(req.params.id, nom, tarif, estimation, nbrmeca,description, existing, req.files)
     res.status(response.status).json({
         message: response.error,
         service: response.service

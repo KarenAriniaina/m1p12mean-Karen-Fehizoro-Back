@@ -1,6 +1,7 @@
 const express = require('express');
 const Service = require('../models/Service');
-const { ListePack } = require('../services/pack');
+const { ListePack, getOnePack } = require('../services/pack');
+const { getOneService, ListeServiceBooking } = require('../services/service');
 const router = express.Router();
 
 router.get('/services', async (req, res) => {
@@ -12,12 +13,36 @@ router.get('/services', async (req, res) => {
     }
 });
 
+router.get('/services/booking', async (req, res) => {
+    const response = await ListeServiceBooking();
+    res.status(response.status).json({
+        message: response.error,
+        service: response.services
+    })
+});
+
+router.get('/service/:id', async (req, res) => {
+    const response = await getOneService(req.params.id);
+    res.status(response.status).json({
+        message: response.error,
+        service: response.service
+    })
+});
+
 router.get('/packs', async (req, res) => {
     const { type, dd, df, nom, statut } = req.query;
     const response = await ListePack(type, dd, df, nom, statut);
     res.status(response.status).json({
         message: response.error,
         packs: response.pack
+    })
+});
+
+router.get('/pack/:id', async (req, res) => {
+    const response = await getOnePack(req.params.id);
+    res.status(response.status).json({
+        message: response.error,
+        pack: response.pack
     })
 });
 

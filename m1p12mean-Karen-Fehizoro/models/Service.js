@@ -23,8 +23,10 @@ const ServicetSchema = new mongoose.Schema({
     photo: {
         type: [String],
         default: []
+    },
+    description:{
+        type:String
     }
-
 }, { timestamps: true });
 
 // Pre-save hook to ensure conversion of string to number
