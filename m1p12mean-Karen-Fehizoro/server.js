@@ -51,6 +51,7 @@ app.use('/depenseExceptionnelle', require('./routes/depenseExceptionnelle'));
 app.use('/recetteExceptionnelle', require('./routes/recetteExceptionnelle'));
 app.use('/notif', require('./routes/NotifRoutes'));
 app.use('/depotEtRetrait',authenticateToken, require('./routes/DepotEtRetrait'));
+app.use('/ca', require('./routes/CaRoutes'));
 app.use('/testProposition', require('./routes/testProposition'));
 app.use('/heureDeTravail', require('./routes/heureDeTravail'));
 app.use('/facture', require('./routes/factureRoutes'));
