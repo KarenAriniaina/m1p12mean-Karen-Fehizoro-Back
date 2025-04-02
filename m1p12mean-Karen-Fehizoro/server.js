@@ -51,4 +51,5 @@ app.use('/depenseExceptionnelle', require('./routes/depenseExceptionnelle'));
 app.use('/recetteExceptionnelle', require('./routes/recetteExceptionnelle'));
 app.use('/notif', require('./routes/NotifRoutes'));
 app.use('/depotEtRetrait',authenticateToken, require('./routes/DepotEtRetrait'));
+app.use('/ca', require('./routes/CaRoutes'));
 app.listen(PORT, () => console.log(`Serveur démarré sur le port${PORT}`));
