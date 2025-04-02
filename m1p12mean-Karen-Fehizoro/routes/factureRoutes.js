@@ -1,0 +1,46 @@
+const express = require('express');
+const router = express.Router();
+const Facture = require('../models/Facture');
+const { ValiderFacture } = require('../services/facturation');
+
+router.post('/', async (req, res) => {
+    const { iddemande,infoFact }=req.body;
+    const reponse= await ValiderFacture(iddemande,infoFact,req.user);
+    res.status(reponse.status).json({ message: reponse.error });
+});
+
+router.get('/', async (req, res) => {
+ try {
+    const facturess = await Facture.find();
+    res.json(facturess);
+ } catch (error) {
+    res.status(500).json({ message: error.message });
+ }
+});
+router.get('/test', async (req, res) => {
+    try { 
+        
+        const factures =await Facture.aggregate([
+            {
+                $lookup: {
+                    from: "clients",  // Collection à joindre
+                    localField: "idClient", // Champ de référence dans "taches"
+                    foreignField: "_id",  // Champ correspondant dans "mecaniciens"
+                    as: "client" // Nom du champ de sortie
+                }
+            },
+            {
+                $unwind: { // Déplie le tableau pour obtenir un objet
+                    path: "$client", // Le champ à déplier
+                    preserveNullAndEmptyArrays: true // Si aucune correspondance, garde un champ vide
+                }
+            }
+        ])
+        res.status(201).json(factures);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+
+module.exports = router;

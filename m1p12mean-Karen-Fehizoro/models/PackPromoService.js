@@ -24,6 +24,9 @@ const ServiceSchema = new mongoose.Schema({
     photo: {
         type: [String],
         default: []
+    },
+    description:{
+        type:String
     }
 }, { timestamps: true });
 
@@ -40,6 +43,9 @@ const PackPromoServiceSchema = new mongoose.Schema({
     photo: {
         type: [String],
         default: []
+    },
+    description:{
+        type:String
     }
 }, { timestamps: true });
 

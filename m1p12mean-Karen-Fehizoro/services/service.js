@@ -1,7 +1,7 @@
 const Service = require('../models/Service')
 const cloudinary = require('../config/cloudinary');
 
-async function CreationService(nom, tarif, estimation, nbrmeca, filesphoto) {
+async function CreationService(nom, tarif, estimation, nbrmeca, description, filesphoto) {
     let serv = null;
     let status = 201;
     let error = '';
@@ -13,7 +13,8 @@ async function CreationService(nom, tarif, estimation, nbrmeca, filesphoto) {
             nom: nom,
             tarif: tarif,
             estimation: estimation,
-            nbrmeca: nbrmeca
+            nbrmeca: nbrmeca,
+            description: description
         });
         let imageUrls = [];
         if (filesphoto && filesphoto.length > 0) {
@@ -25,7 +26,8 @@ async function CreationService(nom, tarif, estimation, nbrmeca, filesphoto) {
                             else resolve(result.secure_url);
                         }).end(file.buffer);
                     });
-                    imageUrls.push(result);
+                    const resizedUrl = result.replace("/upload/", "/upload/w_820,h_480,c_fill/")
+                    imageUrls.push(resizedUrl);
                 }
             } catch (error) {
                 throw new Error("Erreur lors de l'envoi des photos");
@@ -44,14 +46,14 @@ async function CreationService(nom, tarif, estimation, nbrmeca, filesphoto) {
     }
 }
 
-async function ModificationService(id, nom, tarif, estimation, nbrmeca, existingphoto, newphoto) {
+async function ModificationService(id, nom, tarif, estimation, nbrmeca, description, existingphoto, newphoto) {
     let status = 200;
     let error = '';
     let servamodif = null;
     try {
         if (!nom || !tarif || !estimation || !nbrmeca) throw new Error("Veuillez tout remplir");
         let servexistant = await Service.findOne({ nom: nom });
-        if (servexistant && servexistant._id !== id) throw new Error("Un service existe déjà avec le nom saisi");
+        if (servexistant && servexistant._id.toString() !== id) throw new Error("Un service existe déjà avec le nom saisi");
         servamodif = await Service.findById({ _id: id });
         if (!servamodif) throw new Error(`Aucune service à modifier avec l'id ${id}`);
         let newimage = [];
@@ -74,7 +76,8 @@ async function ModificationService(id, nom, tarif, estimation, nbrmeca, existing
                             else resolve(result.secure_url);
                         }).end(file.buffer);
                     });
-                    newimage.push(result);
+                    const resizedUrl = result.replace("/upload/", "/upload/w_820,h_480,c_fill/")
+                    newimage.push(resizedUrl);
                 }
             } catch (error) {
                 throw new Error("Erreur lors de l'envoi des photos");
@@ -85,6 +88,7 @@ async function ModificationService(id, nom, tarif, estimation, nbrmeca, existing
         servamodif.tarif = tarif;
         servamodif.estimation = estimation;
         servamodif.nbrmeca = nbrmeca;
+        servamodif.description = description;
         servamodif.photo = updatedImageUrls
         await servamodif.save()
     } catch (err) {
@@ -122,7 +126,7 @@ async function SupprimerService(id) {
     }
 }
 
-async function getOneService(id){
+async function getOneService(id) {
     let status = 200;
     let error = '';
     let serv = null;
@@ -137,7 +141,76 @@ async function getOneService(id){
         "status": status,
         "error": error,
         "service": serv
-    }   
+    }
 }
 
-module.exports = { CreationService, ModificationService, SupprimerService,getOneService }
+async function ListeServiceBooking() {
+    let serv = [];
+    let status = 200;
+    let error = '';
+    const today = new Date();
+    try {
+        serv = await Service.aggregate([
+            {
+                $lookup: {
+                    from: "packpromoservices",
+                    localField: "_id",
+                    foreignField: "idservice",
+                    as: "pack"
+                }
+            },
+            {
+                $addFields: {
+                    validPack: {
+                        $filter: {
+                            input: "$pack",  // Process the "pack" array
+                            as: "p",
+                            cond: {
+                                $and: [
+                                    { $lte: ["$$p.dateDebut", today] },
+                                    { $gte: ["$$p.dateFin", today] }, 
+                                    { $eq: [{ $size: "$$p.service" }, 1] },
+                                    { $eq: ["$$p.statut", 0] }
+                                ]
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    promo: {
+                        $arrayElemAt: [
+                            {
+                                $sortArray: { input: "$validPack", sortBy: { dateDebut: 1 } }
+                            },
+                            0 
+                        ]
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 1,
+                    nom: 1,
+                    tarif: 1,
+                    photo: 1,
+                    promo: 1 ,
+                    estimation: 1,
+                    // nbrmeca:1    ito tokony decommenter-na
+                }
+            }
+        ]);
+
+    } catch (err) {
+        error = err.message;
+        status = 400
+    }
+    return {
+        "status": status,
+        "error": error,
+        "services": serv
+    }
+}
+
+module.exports = { CreationService, ModificationService, SupprimerService, getOneService, ListeServiceBooking }
