@@ -513,7 +513,7 @@ async function TraitementPourLaRecuperationProposition( informationSurLeDemande 
         mapPropositionParService = regrouperLesPropositionParService(propositionPourChaqueServices)
         resultat = (relierLesPropositionAuInformationDeLaDemande(mapPropositionParService , informationSurLeDemande))
         resultat.idDemande = idDemande
-        resultat= resultat
+        // resultat= resultat
     } catch (err) {
         error = err.message;
         status = 400

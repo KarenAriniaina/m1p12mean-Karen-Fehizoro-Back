@@ -1,16 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const Facture = require('../models/Facture');
+const { ValiderFacture } = require('../services/facturation');
 
 router.post('/', async (req, res) => {
-    try {
-        const factures = new Facture(req.body);
-        await factures.save();
-        res.status(201).json(factures);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
+    const { iddemande,infoFact }=req.body;
+    const reponse= await ValiderFacture(iddemande,infoFact,req.user);
+    res.status(reponse.status).json({ message: reponse.error });
 });
+
 router.get('/', async (req, res) => {
  try {
     const facturess = await Facture.find();

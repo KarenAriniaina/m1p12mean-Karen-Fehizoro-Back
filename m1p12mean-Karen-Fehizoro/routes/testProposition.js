@@ -1,16 +1,23 @@
 const express = require('express');
 const router = express.Router();
-const { RattachementDisponibiliteDansMecanicien, RecuperationListeMecanicien,IntersectionDeuxIntervaleDate ,
-    EnleverUnIntervalDeDateAUneAutreDate , SuppressionIntervaleDateDansChaqueListeIntervale ,
-     SuppressionListeIntervaleDateDansChaqueListeIntervale, RecuperationTacheParMecanicien, DisponibilitePourUtilisateur, 
-     RecuperationListeTacheSurIntervalleDateEtService, RechercheMecanicienSelonSpecialite ,RegroupeLesTachesParIdMecanicien ,
-     AjoutDateParRapportHeureDeTravail , RecuperationListeMecanicienDisponible , RecuperationMecanicienDisponibleAUneIntervalleDeDate,
-     ProposerUnRendezVousSelonService,
-     RecuperationToutPropositionAPartirDateSaisie ,TraitementPourLaRecuperationProposition,
-     ChangerLesStatusDesTaches} = require('../services/traitementPropositionDemande');
+const { RattachementDisponibiliteDansMecanicien, RecuperationListeMecanicien, IntersectionDeuxIntervaleDate,
+    EnleverUnIntervalDeDateAUneAutreDate, SuppressionIntervaleDateDansChaqueListeIntervale,
+    SuppressionListeIntervaleDateDansChaqueListeIntervale, RecuperationTacheParMecanicien, DisponibilitePourUtilisateur,
+    RecuperationListeTacheSurIntervalleDateEtService, RechercheMecanicienSelonSpecialite, RegroupeLesTachesParIdMecanicien,
+    AjoutDateParRapportHeureDeTravail, RecuperationListeMecanicienDisponible, RecuperationMecanicienDisponibleAUneIntervalleDeDate,
+    ProposerUnRendezVousSelonService,
+    RecuperationToutPropositionAPartirDateSaisie, TraitementPourLaRecuperationProposition,
+    ChangerLesStatusDesTaches } = require('../services/traitementPropositionDemande');
+
+
+router.post('/', async (req, res) => {
+    const { info, date } = req.body;
+    const reponse = await TraitementPourLaRecuperationProposition(info, date);
+    res.status(reponse.status).json({ message: reponse.error, proposition: reponse.informationSurLesProposition });
+});
 
 router.get('/', async (req, res) => {
-    
+
     // const intervaleDate1={
     //     dateDebut : new Date("2025-03-25T17:00:00Z"),
     //     dateFin : new Date("2025-03-25T18:00:00Z")
@@ -76,42 +83,44 @@ router.get('/', async (req, res) => {
     // ]
     // resultatFinitionServiceDemande =await RecuperationToutPropositionAPartirDateSaisie("2025-03-08" , 3 ,listeService)
     // console.log(resultatFinitionServiceDemande)
-    let informationSurLeDemande ={
-        listePack:[{
-            service : [
-                { _id : 3 , estimation:30 , nbrmeca :2} ,
-                { _id : 3 , estimation:15 , nbrmeca :1} ,
-                { _id : 3 , estimation:10 , nbrmeca :1} ,
-                { _id : 3 , estimation:10 , nbrmeca :2} ,
-            ] ,
-        } ,
+    let informationSurLeDemande = {
+        listePack: [{
+            id_pack: 1,
+            service: [
+                { _id: 3, estimation: 30, nbrmeca: 2 },
+                { _id: 3, estimation: 15, nbrmeca: 1 },
+                { _id: 3, estimation: 10, nbrmeca: 1 },
+                { _id: 3, estimation: 10, nbrmeca: 2 },
+            ],
+        },
         {
-            service : [
-                { _id : 3 , estimation:30 , nbrmeca :2} ,
-                { _id : 3 , estimation:15 , nbrmeca :1} ,
-                { _id : 3 , estimation:10 , nbrmeca :1} ,
-                { _id : 3 , estimation:10 , nbrmeca :2} ,
-            ] ,
-        }  
+            id_pack: 2,
+            service: [
+                { _id: 3, estimation: 30, nbrmeca: 2 },
+                { _id: 3, estimation: 15, nbrmeca: 1 },
+                { _id: 3, estimation: 10, nbrmeca: 1 },
+                { _id: 3, estimation: 10, nbrmeca: 2 },
+            ],
+        }
         ],
         listeService: [
-            { _id : 3 , estimation:30 , nbrmeca :2} ,
-            { _id : 3 , estimation:15 , nbrmeca :1} ,
-            { _id : 3 , estimation:10 , nbrmeca :1} ,
-            { _id : 3 , estimation:10 , nbrmeca :2} ,
+            { _id: 3, estimation: 30, nbrmeca: 2 },
+            { _id: 3, estimation: 15, nbrmeca: 1 },
+            { _id: 3, estimation: 10, nbrmeca: 1 },
+            { _id: 3, estimation: 10, nbrmeca: 2 },
         ]
     }
     // console.log(informationSurLeDemande.listePack)
     // console.log(informationSurLeDemande.listeService)
-    
 
-    await TraitementPourLaRecuperationProposition( informationSurLeDemande , "2025-03-08")
 
+    const reponse = await TraitementPourLaRecuperationProposition(informationSurLeDemande, "2025-03-08")
+    res.status(reponse.status).json({ message: reponse.error, proposition: reponse.informationSurLesProposition });
     // await ChangerLesStatusDesTaches(90)
     // console.log("Dd : "+resultatFinitionServiceDemande.dateDebutDisponibiliteMecanicien+"  ----- Df: "+resultatFinitionServiceDemande.dateFinDisponibiliteMecanicien)
     // console.log(resultatFinitionServiceDemande.listeMecanicien)
 
-    
+
 });
 
 
