@@ -1,11 +1,8 @@
 const mongoose = require("mongoose");
-// const PackPromoService = require("./PackPromoService"); // Import schema
-// const Service = require("./Service"); // Import schema
 const AutoIncrement = require("mongoose-sequence")(mongoose);
 const Service = new mongoose.Schema({
     _id: Number,
     nom: { type: String, required: true },
-
     tarif: {
         type: Number,
         required: true
@@ -68,3 +65,4 @@ const FactureSchema = new mongoose.Schema({
 FactureSchema.plugin(AutoIncrement, { id: "facture_id_seq", inc_field: "_id" });
 
 module.exports = mongoose.model('Facture', FactureSchema);
+
