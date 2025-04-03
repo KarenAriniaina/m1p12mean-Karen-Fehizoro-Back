@@ -2,6 +2,7 @@ const Demande = require("../models/Demande")
 const HeureDeTravail = require("../models/HeureDeTravail")
 const Mecanicien = require("../models/Mecanicien")
 const TacheMecanicien = require("../models/TacheMecanicien")
+const Service = require("../models/Service")
 
 
 function comparaisonDeuxDates(dateDebut , dateFin){
@@ -77,7 +78,7 @@ function SuppressionListeIntervaleDateDansChaqueListeIntervale(listeIntervaleAEn
 
 async function RecuperationTacheParMecanicien(){
     const tacheMecaniciens = await TacheMecanicien.find();
-    console.log("aaaa"+tacheMecaniciens.length)
+    // console.log("aaaa"+tacheMecaniciens.length)
     let map = new Map()
     for( i = 0 ; i<tacheMecaniciens.length ; i++){
         if(map.has(tacheMecaniciens[i].idMeca)){
@@ -135,7 +136,7 @@ async function RattachementDisponibiliteDansMecanicien(){
             ]
         }
       
-        console.log( listeToutMecanicien[i])
+        // console.log( listeToutMecanicien[i])
     }
     // console.log(listeToutMecanicien)
 }
@@ -273,15 +274,18 @@ function RecuperationListeMecanicienDisponible(listeMecanicienSelonService , Map
 
 async function RecuperationMecanicienDisponibleAUneIntervalleDeDate(dateDemandeDebut ,dateDemandeFin , idService , idDemande){
     listeTacheMecanicien=await RecuperationListeTacheSurIntervalleDateEtService(dateDemandeDebut ,dateDemandeFin , idService  ,idDemande)
-    // console.log(listeTacheMecanicien)
     mapListeTacheMecanicien =await RegroupeLesTachesParIdMecanicien(listeTacheMecanicien)
-    // console.log(mapListeTacheMecanicien)
     listeMecanicienSelonService = await RechercheMecanicienSelonSpecialite(idService)
     listeMecanicienDispo = RecuperationListeMecanicienDisponible(listeMecanicienSelonService , mapListeTacheMecanicien)
     return listeMecanicienDispo
 }
 
 
+async function RechercheInfoServiceSelonId(idService){
+    infoSurService=await Service.findOne(  {"_id": idService})
+
+    return infoSurService
+}
 async function ProposerUnRendezVousSelonService(idService ,heureDeTravailMatinInitial , heureDeTravailSoirInitial , dateDebut ,dureeServiceMinute , nbrMecanicienUtiliser , idDemande){
     heureDeTravailMatin = Object.assign({} , heureDeTravailMatinInitial)
     heureDeTravailSoir =  Object.assign({} ,heureDeTravailSoirInitial)
@@ -292,10 +296,18 @@ async function ProposerUnRendezVousSelonService(idService ,heureDeTravailMatinIn
     dateFin= resultatDateDebutEtFin.dateFin
     nbrMecanicienDispo= 0
     listePersonnelDispo = []
+    nbrMecanicienTotalPourLeService = await RechercheMecanicienSelonSpecialite(idService)
+    if(nbrMecanicienTotalPourLeService.length<nbrMecanicienUtiliser){
+        inforSurService =await RechercheInfoServiceSelonId(idService)
+        throw new Error(`Manque de Mecanicien pour le service ${inforSurService.nom}!`);
+    }
     while(  nbrMecanicienDispo<nbrMecanicienUtiliser ){
         // console.log("dateDebut : "+dateDebut+" --- dateFin : "+dateFin)
         listePersonnelDispo=await RecuperationMecanicienDisponibleAUneIntervalleDeDate(dateDebut ,dateFin , idService , idDemande)
+        // console.log("///////////////////////////////")
         // console.log(listePersonnelDispo)
+        // console.log("///////////////////////////////")
+
         nbrMecanicienDispo= listePersonnelDispo.length
         if( nbrMecanicienDispo>=nbrMecanicienUtiliser ){ break }
         dateDebut= dateFin
@@ -436,9 +448,12 @@ function regroupeLesPacksEtLesServicesEnTableauDeService(listePack , listeServic
     let map = new Map()
     for(let i = 0 ; i<listeService.length ; i++){
         listeToutService.push(listeService[i])
+        console.log("******------- : "+listeService[i])
+
     }
     for(let j = 0 ; j<listePack.length ; j++){
         for(let i = 0 ; i<listePack[j].service.length ; i++){
+            console.log(listePack[j].service[i])
             listeToutService.push(listePack[j].service[i])
         }
     }
@@ -467,12 +482,24 @@ async function RecuperationToutPropositionAPartirDateSaisie(dateSaisie ,idDemand
     heureDeTravailMatinInitial = heureDeTravail.heureDeTravailMatin
     heureDeTravailSoirInitial = heureDeTravail.heureDeTravailSoir
     let resultat =[]
-    
+
+    // console.log("---------------------------")
+
+    // console.log(listeService)
+
+    // console.log("---------------------------")
     dateDebut =( new Date((heureDeTravail.heureDeTravailMatin.dateDebut).getTime()))
     for(let i=0 ; i<listeService.length ; i++){
         console.log(i)
         let propositionFinale = await ProposerUnRendezVousSelonService(listeService[i]._id ,heureDeTravailMatinInitial , heureDeTravailSoirInitial , new Date(dateDebut.getTime()) ,listeService[i].estimation , listeService[i].nbrmeca , idDemande)
+        
+        // console.log("---------------------------")
+
+        // console.log(propositionFinale)
+
+        // console.log("---------------------------")
         let listeMecaFinal=await CreationTacheTemporairePourLeMecanicien(propositionFinale)
+        // console.log(listeMecaFinal)
         propositionFinale.listeMecanicien = listeMecaFinal
         resultat.push(propositionFinale)
     }
@@ -499,19 +526,24 @@ function relierLesPropositionAuInformationDeLaDemande(mapPropositionParService ,
 }
 
 async function TraitementPourLaRecuperationProposition( informationSurLeDemande , dateSaisie){
-    
     let resultat = null;
     let status = 201;
     let error = ''; 
     try{
         demande = await new Demande().save()
-        console.log(demande)
+        // console.log(demande)
         idDemande = demande._id
         listeToutLesServices=regroupeLesPacksEtLesServicesEnTableauDeService(informationSurLeDemande.listePack , informationSurLeDemande.listeService)
-        console.log(listeToutLesServices)
+      
+        
+        // console.log(listeToutLesServices)
         propositionPourChaqueServices=await RecuperationToutPropositionAPartirDateSaisie(dateSaisie ,idDemande , listeToutLesServices)
+     
+        
         mapPropositionParService = regrouperLesPropositionParService(propositionPourChaqueServices)
+        
         resultat = (relierLesPropositionAuInformationDeLaDemande(mapPropositionParService , informationSurLeDemande))
+        console.log(informationSurLeDemande);
         resultat.idDemande = idDemande
         // resultat= resultat
     } catch (err) {

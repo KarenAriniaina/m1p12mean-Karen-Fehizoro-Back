@@ -41,6 +41,23 @@ function getDetailsHTML(items) {
     return data
 }
 
+async function getFacturesSelonClient( user) {
+    let status = 201;
+    let error = '';
+    let listeFacture = [];
+    try {
+        listeFacture = await Facture.find({ idClient: user.id }).sort({ datefact: -1 });
+        
+    } catch (err) {
+        error = err.message;
+        status = 400
+    }
+    return {
+        "status": status,
+        "error": error ,
+        "listeFacture" : listeFacture
+    }
+}
 function getFactureHTML(fact) {
     return `
 <!DOCTYPE html>
@@ -139,5 +156,5 @@ async function getFacture(id) {
 }
 
 module.exports = {
-    getFacture, ValiderFacture
+    getFacture, ValiderFacture , getFacturesSelonClient
 }
