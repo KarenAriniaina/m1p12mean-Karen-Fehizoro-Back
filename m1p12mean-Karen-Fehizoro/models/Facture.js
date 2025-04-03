@@ -15,7 +15,6 @@ const Service = new mongoose.Schema({
 
     nbrmeca: {
         type: Number,
-        required: true
     },
     photo: {
         type: [String],

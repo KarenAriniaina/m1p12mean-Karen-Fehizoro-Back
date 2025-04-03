@@ -1,7 +1,31 @@
+const Client = require('../models/Client');
+const Facture = require('../models/Facture');
+const TacheMecanicien = require('../models/TacheMecanicien');
+
 const HTMLToPDF = require('convert-html-to-pdf').default;
 
-function ValiderFacture(iddemande,pack,service){
+async function ValiderFacture(iddemande, infoFact, user) {
+    let status = 201;
+    let error = '';
+    try {
+        clientsolde = await Client.findById({ _id: user.id });
+        if (clientsolde == null) { throw new Error("Le client n'existe pas!") }
+        if (clientsolde < infoFact.total) { throw new Error("Votre solde est insuffisant"); }
+        clientsolde.solde -= infoFact.total;
+        clientsolde.save();
+        infoFact.idClient = user.id;
+        const fact = new Facture(infoFact);
+        await fact.save();
+        await TacheMecanicien.updateMany({ idDemande: iddemande }, { $set: { status: 0, idDemande: 0, idfact: fact._id } });
 
+    } catch (err) {
+        error = err.message;
+        status = 400
+    }
+    return {
+        "status": status,
+        "error": error
+    }
 }
 
 function getDetailsHTML(items) {
@@ -100,20 +124,20 @@ function getFactureHTML(fact) {
 }
 
 async function getFacture(id) {
-    return new Promise(async (resolve,reject) => {
+    return new Promise(async (resolve, reject) => {
         try {
-            const fact=null; //get details fact
+            const fact = null; //get details fact
             const html = getFactureHTML(fact)
             const htmlToPDF = new HTMLToPDF(html)
 
-            const pdf = await htmlToPDF.convert({waitForNetworkIdle: true, browserOptions: {defaultViewport: {width: 1920, height: 1080}}, pdfOptions: {height: 1200, width:900, timeout: 0}})
+            const pdf = await htmlToPDF.convert({ waitForNetworkIdle: true, browserOptions: { defaultViewport: { width: 1920, height: 1080 } }, pdfOptions: { height: 1200, width: 900, timeout: 0 } })
             resolve(pdf)
-        } catch(err){
+        } catch (err) {
             reject(err)
         }
     })
 }
 
 module.exports = {
-    getFacture
+    getFacture, ValiderFacture
 }
