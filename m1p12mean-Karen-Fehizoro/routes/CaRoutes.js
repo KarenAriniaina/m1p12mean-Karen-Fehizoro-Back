@@ -4,7 +4,6 @@ const router = express.Router();
 
 router.get('/statjour', async (req, res) => {
     const { date } = req.query
-    console.log(date);
     const reponse = await getStatToday(date);
     res.status(reponse.status).json({ message: reponse.erreur, stat: reponse.stat });
 });
