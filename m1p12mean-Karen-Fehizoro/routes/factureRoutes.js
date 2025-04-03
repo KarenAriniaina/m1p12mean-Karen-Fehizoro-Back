@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Facture = require('../models/Facture');
-const { ValiderFacture } = require('../services/facturation');
+const { ValiderFacture , getFacturesSelonClient } = require('../services/facturation');
 
 router.post('/', async (req, res) => {
     const { iddemande,infoFact }=req.body;
@@ -17,6 +17,16 @@ router.get('/', async (req, res) => {
     res.status(500).json({ message: error.message });
  }
 });
+
+router.post('/mesFactures', async (req, res) => {
+    const response= await getFacturesSelonClient(req.user);
+    console.log(response)
+    res.status(response.status).json({
+        message: response.error,
+        listeFacture: response.listeFacture
+    })
+});
+
 router.get('/test', async (req, res) => {
     try { 
         

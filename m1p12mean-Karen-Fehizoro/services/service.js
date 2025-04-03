@@ -197,7 +197,7 @@ async function ListeServiceBooking() {
                     photo: 1,
                     promo: 1 ,
                     estimation: 1,
-                    // nbrmeca:1    ito tokony decommenter-na
+                    nbrmeca:1   // ito tokony decommenter-na
                 }
             }
         ]);

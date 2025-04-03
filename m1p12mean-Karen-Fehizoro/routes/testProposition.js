@@ -12,6 +12,12 @@ const { RattachementDisponibiliteDansMecanicien, RecuperationListeMecanicien, In
 
 router.post('/', async (req, res) => {
     const { info, date } = req.body;
+    // for(let i=0 ; i<info.listePack.length ; i++){
+    //     for(let j=0 ; j<info.listePack[i].service.length ; j++){
+    //         console.log(info.listePack[i].service[j])
+    //     }
+    // }
+    // console.log(info);
     const reponse = await TraitementPourLaRecuperationProposition(info, date);
     res.status(reponse.status).json({ message: reponse.error, proposition: reponse.informationSurLesProposition });
 });

@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 5000;
 const allowedOrigins = [
     "http://localhost:4200",
     "http://localhost:4201",
+    "http://localhost:50496",
     // "http://your-angular-app.com"
 ];
 
