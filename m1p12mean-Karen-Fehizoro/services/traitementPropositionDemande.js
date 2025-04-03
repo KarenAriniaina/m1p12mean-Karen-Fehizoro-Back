@@ -317,6 +317,11 @@ async function ProposerUnRendezVousSelonService(idService ,heureDeTravailMatinIn
         // console.log("dateDebut5 : "+dateDebut+" --- dateFin5 : "+dateFin)
       
     }
+    console.log("================")
+    console.log({ dateDebutDisponibiliteMecanicien : dateDebut ,
+        dateFinDisponibiliteMecanicien : dateFin })
+    console.log("================")
+
     return {
         idDemande : idDemande ,
         nbrMecanicienUtiliser : nbrMecanicienUtiliser,
@@ -543,7 +548,8 @@ async function TraitementPourLaRecuperationProposition( informationSurLeDemande 
         mapPropositionParService = regrouperLesPropositionParService(propositionPourChaqueServices)
         
         resultat = (relierLesPropositionAuInformationDeLaDemande(mapPropositionParService , informationSurLeDemande))
-        console.log(informationSurLeDemande);
+        console.log(informationSurLeDemande.listePack.service);
+        console.log(informationSurLeDemande.listeService);
         resultat.idDemande = idDemande
         // resultat= resultat
     } catch (err) {

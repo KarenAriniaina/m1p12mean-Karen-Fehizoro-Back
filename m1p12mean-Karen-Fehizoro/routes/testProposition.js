@@ -19,6 +19,7 @@ router.post('/', async (req, res) => {
     // }
     // console.log(info);
     const reponse = await TraitementPourLaRecuperationProposition(info, date);
+    // console.log(reponse)
     res.status(reponse.status).json({ message: reponse.error, proposition: reponse.informationSurLesProposition });
 });
 

@@ -38,10 +38,28 @@ async function ListeTacheMecanicienFiltre( idPersonnel,idService, dd, df, status
         
         if (statusFiltre && statusFiltre != null && statusFiltre != "" ) 
             query.status = Number(statusFiltre);
-        // query.idDemande = 0;
+        query.idDemande = 0;
         query.idMeca = idPersonnel;
         console.log(query)
-        listeTacheMecanicien = await TacheMecanicien.find(query);
+        // listeTacheMecanicien = await TacheMecanicien.find(query);
+        listeTacheMecanicien = await TacheMecanicien.aggregate([
+            { $match: query }, // Filtrage de la requête
+            {
+                $lookup: {
+                    from: "services", // Nom de la collection à joindre
+                    localField: "idservice", // Champ de la collection actuelle
+                    foreignField: "_id", // Champ de la collection "services"
+                    as: "serviceDetails" // Nom du champ qui contiendra les résultats joints
+                }
+            },
+            {
+                $unwind: {
+                    path: "$serviceDetails", // Déplie le tableau serviceDetails pour avoir une seule ligne
+                    preserveNullAndEmptyArrays: true // Garde les documents sans correspondance dans "services"
+                }
+            },
+           
+        ]);
     } catch (err) {
         error = err.message;
         status = 400
@@ -58,9 +76,9 @@ async function TotalTacheSelonEtat(idPersonnel){
     let error = '';
     resultat = {}
     try {
-        tacheEnAttente=await TacheMecanicien.countDocuments({  idMeca :idPersonnel, status: 0 });
-        tacheEnCours=await TacheMecanicien.countDocuments({  idMeca :idPersonnel , status: 1 });
-        tacheTerminer=await TacheMecanicien.countDocuments({  idMeca :idPersonnel , status: 2 });
+        tacheEnAttente=await TacheMecanicien.countDocuments({  idMeca :idPersonnel , idDemande:0, status: 0 });
+        tacheEnCours=await TacheMecanicien.countDocuments({  idMeca :idPersonnel, idDemande:0 , status: 1 });
+        tacheTerminer=await TacheMecanicien.countDocuments({  idMeca :idPersonnel, idDemande:0 , status: 2 });
         resultat = {
             nbrEnAttente : tacheEnAttente ,
             nbrEnCours : tacheEnCours ,
