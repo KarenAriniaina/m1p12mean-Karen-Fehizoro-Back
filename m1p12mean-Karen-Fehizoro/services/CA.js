@@ -12,7 +12,7 @@ async function getStatToday(dt) {
         ]);
 
         const factures = await Facture.aggregate([
-            { $match: { createdAt: { $gte: dt } } }, // Utilisation de timestamps
+            { $match: { datefact: { $gte: dt } } }, // Utilisation de timestamps
             { $group: { _id: null, totalFactures: { $sum: "$total" }, countFactures: { $sum: 1 } } }
         ]);
 
@@ -57,7 +57,7 @@ async function getChiffreParHeure(date) {
         ]);
 
         const TotalFactureParHeure = await Facture.aggregate([
-            { $match: { date: { $gte: date } } },
+            { $match: { datefact: { $gte: date } } },
             {
                 $group: {
                     _id: { $hour: "$datefact" },
@@ -101,8 +101,9 @@ async function getChiffreParHeure(date) {
         // Générer toutes les heures de 0 à 23 avec CA cumulé
         let cumulativeTotal = 0;
         const results = [];
-
-        for (let i = 0; i < 24; i++) {
+        const now = new Date();
+        const hours = now.getHours();
+        for (let i = 7; i < 24; i++) {
             if (listeCaHeure[i]) {
                 cumulativeTotal += listeCaHeure[i].total;
             }
@@ -138,68 +139,65 @@ async function getChiffreParDate(dd, df) {
                     _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
                     totalRecettes: { $sum: "$total" }
                 }
-            }
+            },
+            { $sort: { date: 1 } }
         ]);
-        console.log(TotalRecette)
+
         const TotalFacture = await Facture.aggregate([
-            { $match: { date: { $gte: dd, $lte: df } } },
+            { $match: { datefact: { $gte: dd, $lte: df } } },
             {
                 $group: {
                     _id: { $dateToString: { format: "%Y-%m-%d", date: "$datefact" } },
                     totalFactures: { $sum: "$total" }
                 }
-            }
+            },
+            { $sort: { datefact: 1 } }
         ]);
 
-        console.log(TotalFacture)
-        const TotalEntreeParJour = {};
-
-        TotalRecette.forEach(item => {
-            TotalEntreeParJour[item._id] = { date: item._id, total: item.totalRecettes };
-        });
-
-        TotalFacture.forEach(item => {
-            if (TotalEntreeParJour[item._id]) {
-                TotalEntreeParJour[item._id].total = item.totalFactures;
-            } else {
-                TotalEntreeParJour[item._id] = { date: item._id, total: item.totalFactures };
-            }
-        });
-
-        const EntreeParJour = []
-        const DateEntree = Object.values(TotalEntreeParJour);
-
-        DateEntree.forEach(entry => {
-            EntreeParJour.push(entry)
-        });
-
         // sortie
-        const SortieParJour = await DepenseExceptionnelle.aggregate([
+        const TotalSortie = await DepenseExceptionnelle.aggregate([
             {
                 $match: {
                     date: {
-                        $gte: dd,  // Ensure dd is a valid Date object
-                        $lte: df   // Ensure df is a valid Date object
+                        $gte: dd,
+                        $lte: df
                     }
                 }
             },
             {
                 $group: {
-                    _id: {
-                        $dateToString: {
-                            format: "%Y-%m-%d",
-                            date: "$date"
-                        }
-                    },
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
                     total: { $sum: "$total" }
                 }
-            }
+            },
+            { $sort: { date: 1 } }
         ]);
-        console.log(SortieParJour)
-        reponse = {
-            sortie: SortieParJour,
-            entree: EntreeParJour
-        }
+        const TotalEntreeSortie = {};
+
+        TotalRecette.forEach(item => {
+            const dateKey = item._id;
+            TotalEntreeSortie[dateKey] = { date: item._id, entree: item.totalRecettes, sortie: 0 };
+        });
+
+        TotalFacture.forEach(item => {
+            const dateKey = item._id;
+            if (TotalEntreeSortie[dateKey]) {
+                TotalEntreeSortie[dateKey].entree += item.totalFactures;
+            } else {
+                TotalEntreeSortie[dateKey] = { date: item._id, entree: item.totalFactures, sortie: 0 };
+            }
+        });
+
+        TotalSortie.forEach(item => {
+            const dateKey = item._id;
+            if (TotalEntreeSortie[dateKey]) {
+                TotalEntreeSortie[dateKey].sortie = item.total;
+            } else {
+                TotalEntreeSortie[dateKey] = { date: item._id, entree: 0, sortie: item.total };
+            }
+        });
+
+        reponse = Object.values(TotalEntreeSortie);
     } catch (error) {
         console.log(error)
         statut = 400;
