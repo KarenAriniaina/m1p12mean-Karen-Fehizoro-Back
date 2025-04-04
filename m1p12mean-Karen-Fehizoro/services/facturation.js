@@ -4,6 +4,128 @@ const TacheMecanicien = require('../models/TacheMecanicien');
 
 const HTMLToPDF = require('convert-html-to-pdf').default;
 
+async function ListeTacheEnCours(dt) {
+    let status = 200; let error = ''; let tasks = null;
+    dt = (dt) ? new Date(dt) : new Date();
+    try {
+        tasks = await TacheMecanicien.aggregate([
+            {
+                $match: {
+                    $or: [
+                        {
+                            $and: [
+                                {
+                                    $expr: {
+                                        $lte: [{ $dateToString: { format: "%Y-%m-%d", date: "$dateDebut" } }, { $dateToString: { format: "%Y-%m-%d", date: dt } }]
+                                    }
+                                },
+                                {
+                                    $expr: {
+                                        $gte: [{ $dateToString: { format: "%Y-%m-%d", date: "$estimation" } }, { $dateToString: { format: "%Y-%m-%d", date: dt } }]
+                                    }
+                                },
+                                {
+                                    idDemande: 0
+                                },
+                                {
+                                    idfact: { $ne: 0 }
+                                }
+                            ]
+                        },
+                        {
+                            $and: [
+                                { status: 0 },
+                                {
+                                    $expr: {
+                                        $lt: [{ $dateToString: { format: "%Y-%m-%d", date: "$estimation" } }, { $dateToString: { format: "%Y-%m-%d", date: dt } }]
+                                    }
+                                },
+                                {
+                                    idDemande: 0
+                                },
+                                {
+                                    idfact: { $ne: 0 }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                $group: {
+                    _id: { idfact: "$idfact", idservice: "$idservice", dateDebut: "$dateDebut", estimation: "$estimation" },
+                    totalMeca: { $sum: 1 },
+                    taskDetails: { $push: "$$ROOT" }
+                }
+            },
+            {
+                $lookup: {
+                    from: "factures",
+                    localField: "_id.idfact",
+                    foreignField: "_id",
+                    as: "factureDetails"
+                }
+            },
+            { $unwind: "$factureDetails" },
+            { $unwind: "$factureDetails.services" },
+            {
+                $match: {
+                    $expr: { $eq: ["$factureDetails.services._id", "$_id.idservice"] }
+                }
+            },
+            {
+                $lookup: {
+                    from: "mecaniciens",
+                    localField: "taskDetails.idMeca",
+                    foreignField: "_id",
+                    as: "mecanicienDetails"
+                }
+            },
+            {
+                $lookup: {
+                    from: "clients",
+                    localField: "factureDetails.idClient",
+                    foreignField: "_id",
+                    as: "clientDetails"
+                }
+            },
+            { $unwind: "$clientDetails" },
+            {
+                $project: {
+                    _id: 0,
+                    idfact: "$_id.idfact",
+                    idservice: "$_id.idservice",
+                    totalMeca: 1,
+                    status: 1,
+                    dateDebut: "$_id.dateDebut",
+                    estimation: "$_id.estimation",
+                    taskDetails: 1,
+                    status: "$factureDetails.status",
+                    service: "$factureDetails.services",
+                    mecanicienDetails: {
+                        _id: 1,
+                        nom: 1,
+                        prenom: 1,
+                        photo: 1
+                    },
+                    clientDetails: {
+                        _id: 1,
+                        prenom: 1
+                    }
+                }
+            }
+        ]);
+    } catch (err) {
+        error = err.message;
+        status = 400
+    }
+    return {
+        "status": status,
+        "error": error,
+        "task": tasks
+    }
+}
+
 async function ValiderFacture(iddemande, infoFact, user) {
     let status = 201;
     let error = '';
@@ -41,21 +163,21 @@ function getDetailsHTML(items) {
     return data
 }
 
-async function getFacturesSelonClient( user) {
+async function getFacturesSelonClient(user) {
     let status = 201;
     let error = '';
     let listeFacture = [];
     try {
         listeFacture = await Facture.find({ idClient: user.id }).sort({ datefact: -1 });
-        
+
     } catch (err) {
         error = err.message;
         status = 400
     }
     return {
         "status": status,
-        "error": error ,
-        "listeFacture" : listeFacture
+        "error": error,
+        "listeFacture": listeFacture
     }
 }
 function getFactureHTML(fact) {
@@ -156,5 +278,5 @@ async function getFacture(id) {
 }
 
 module.exports = {
-    getFacture, ValiderFacture , getFacturesSelonClient
+    getFacture, ValiderFacture, getFacturesSelonClient, ListeTacheEnCours
 }
