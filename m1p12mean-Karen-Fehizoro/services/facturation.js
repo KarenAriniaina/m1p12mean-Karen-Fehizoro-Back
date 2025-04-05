@@ -4,6 +4,54 @@ const TacheMecanicien = require('../models/TacheMecanicien');
 
 const HTMLToPDF = require('convert-html-to-pdf').default;
 
+async function ListeFacture(fact, dd, df) {
+    let status = 200; let error = ''; let lfact = [];
+    try {
+        const start = dd ? new Date(dd) : null;
+        const end = df ? new Date(new Date(df).setHours(23, 59, 59, 999)) : null;
+
+        const matchConditions = {};
+        if (start) matchConditions.datefact = { ...matchConditions.datefact, $gte: start };
+        if (end) matchConditions.datefact = { ...matchConditions.datefact, $lte: end };
+        if (fact && fact != null) matchConditions._id = fact;
+        console.log(matchConditions)
+        lfact = await Facture.aggregate([
+            { $match: matchConditions },
+            {
+                $lookup: {
+                    from: "clients",
+                    localField: "idClient",
+                    foreignField: "_id",
+                    as: "client"
+                }
+            },
+            { $unwind: "$client" },
+            {
+                $project: {
+                    _id: 1,
+                    total: 1,
+                    datefact: 1,
+                    services: 1,
+                    pack: 1,
+                    status: 1,
+                    client: {
+                        _id: 1,
+                        prenom: 1
+                    }
+                }
+            }
+        ]);
+    } catch (err) {
+        error = err.message;
+        status = 400;
+    }
+    return {
+        status: status,
+        error: error,
+        lfact: lfact
+    }
+}
+
 async function ListeTacheEnCours(dt) {
     let status = 200; let error = ''; let tasks = null;
     dt = (dt) ? new Date(dt) : new Date();
@@ -180,6 +228,7 @@ async function getFacturesSelonClient(user) {
         "listeFacture": listeFacture
     }
 }
+
 function getFactureHTML(fact) {
     return `
 <!DOCTYPE html>
@@ -242,7 +291,7 @@ function getFactureHTML(fact) {
                 </div>
             </div>
             <div class="table-row-group">
-            ${getDetailsHTML(fact.service)}
+            ${getDetailsHTML(fact.services)}
             ${getDetailsHTML(fact.pack)}
             </div>
         </div>
@@ -265,10 +314,21 @@ function getFactureHTML(fact) {
 async function getFacture(id) {
     return new Promise(async (resolve, reject) => {
         try {
-            const fact = null; //get details fact
+            const fact = await Facture.aggregate([
+                { $match: { _id: id } },
+                { $limit: 1 },  // Ensures only 1 result is returned
+                {
+                    $lookup: {
+                        from: "clients",
+                        localField: "idClient",
+                        foreignField: "_id",
+                        as: "client"
+                    }
+                },
+                { $unwind: "$client" },
+            ]);
             const html = getFactureHTML(fact)
             const htmlToPDF = new HTMLToPDF(html)
-
             const pdf = await htmlToPDF.convert({ waitForNetworkIdle: true, browserOptions: { defaultViewport: { width: 1920, height: 1080 } }, pdfOptions: { height: 1200, width: 900, timeout: 0 } })
             resolve(pdf)
         } catch (err) {
@@ -278,5 +338,5 @@ async function getFacture(id) {
 }
 
 module.exports = {
-    getFacture, ValiderFacture, getFacturesSelonClient, ListeTacheEnCours
+    getFacture, ValiderFacture, getFacturesSelonClient, ListeTacheEnCours, ListeFacture
 }
