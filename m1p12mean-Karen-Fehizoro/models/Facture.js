@@ -58,7 +58,8 @@ const FactureSchema = new mongoose.Schema({
         default: []
     },
     total: { type: Number, required: true, default: 0 },
-    datefact: { type: Date, required: true, default: Date.now }
+    datefact: { type: Date, required: true, default: Date.now },
+    status: { type: Number, default: 0 }
 }, { timestamps: true });
 
 FactureSchema.plugin(AutoIncrement, { id: "facture_id_seq", inc_field: "_id" });

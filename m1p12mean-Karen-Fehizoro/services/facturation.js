@@ -3,6 +3,177 @@ const Facture = require('../models/Facture');
 const TacheMecanicien = require('../models/TacheMecanicien');
 
 const HTMLToPDF = require('convert-html-to-pdf').default;
+const dayjs = require('dayjs');
+
+async function ListeFacture(fact, dd, df) {
+    let status = 200; let error = ''; let lfact = [];
+    try {
+        const start = dd ? new Date(dd) : null;
+        const end = df ? new Date(new Date(df).setHours(23, 59, 59, 999)) : null;
+
+        const matchConditions = {};
+        if (start) matchConditions.datefact = { ...matchConditions.datefact, $gte: start };
+        if (end) matchConditions.datefact = { ...matchConditions.datefact, $lte: end };
+        if (fact && fact != null) matchConditions._id = fact;
+        console.log(matchConditions)
+        lfact = await Facture.aggregate([
+            { $match: matchConditions },
+            {
+                $lookup: {
+                    from: "clients",
+                    localField: "idClient",
+                    foreignField: "_id",
+                    as: "client"
+                }
+            },
+            { $unwind: "$client" },
+            {
+                $project: {
+                    _id: 1,
+                    total: 1,
+                    datefact: 1,
+                    services: 1,
+                    pack: 1,
+                    status: 1,
+                    client: {
+                        _id: 1,
+                        prenom: 1
+                    }
+                }
+            }
+        ]);
+    } catch (err) {
+        error = err.message;
+        status = 400;
+    }
+    return {
+        status: status,
+        error: error,
+        lfact: lfact
+    }
+}
+
+async function ListeTacheEnCours(dt) {
+    let status = 200; let error = ''; let tasks = null;
+    dt = (dt) ? new Date(dt) : new Date();
+    try {
+        tasks = await TacheMecanicien.aggregate([
+            {
+                $match: {
+                    $or: [
+                        {
+                            $and: [
+                                {
+                                    $expr: {
+                                        $lte: [{ $dateToString: { format: "%Y-%m-%d", date: "$dateDebut" } }, { $dateToString: { format: "%Y-%m-%d", date: dt } }]
+                                    }
+                                },
+                                {
+                                    $expr: {
+                                        $gte: [{ $dateToString: { format: "%Y-%m-%d", date: "$estimation" } }, { $dateToString: { format: "%Y-%m-%d", date: dt } }]
+                                    }
+                                },
+                                {
+                                    idDemande: 0
+                                },
+                                {
+                                    idfact: { $ne: 0 }
+                                }
+                            ]
+                        },
+                        {
+                            $and: [
+                                { status: 0 },
+                                {
+                                    $expr: {
+                                        $lt: [{ $dateToString: { format: "%Y-%m-%d", date: "$estimation" } }, { $dateToString: { format: "%Y-%m-%d", date: dt } }]
+                                    }
+                                },
+                                {
+                                    idDemande: 0
+                                },
+                                {
+                                    idfact: { $ne: 0 }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                $group: {
+                    _id: { idfact: "$idfact", idservice: "$idservice", dateDebut: "$dateDebut", estimation: "$estimation" },
+                    totalMeca: { $sum: 1 },
+                    taskDetails: { $push: "$$ROOT" }
+                }
+            },
+            {
+                $lookup: {
+                    from: "factures",
+                    localField: "_id.idfact",
+                    foreignField: "_id",
+                    as: "factureDetails"
+                }
+            },
+            { $unwind: "$factureDetails" },
+            { $unwind: "$factureDetails.services" },
+            {
+                $match: {
+                    $expr: { $eq: ["$factureDetails.services._id", "$_id.idservice"] }
+                }
+            },
+            {
+                $lookup: {
+                    from: "mecaniciens",
+                    localField: "taskDetails.idMeca",
+                    foreignField: "_id",
+                    as: "mecanicienDetails"
+                }
+            },
+            {
+                $lookup: {
+                    from: "clients",
+                    localField: "factureDetails.idClient",
+                    foreignField: "_id",
+                    as: "clientDetails"
+                }
+            },
+            { $unwind: "$clientDetails" },
+            {
+                $project: {
+                    _id: 0,
+                    idfact: "$_id.idfact",
+                    idservice: "$_id.idservice",
+                    totalMeca: 1,
+                    status: 1,
+                    dateDebut: "$_id.dateDebut",
+                    estimation: "$_id.estimation",
+                    taskDetails: 1,
+                    status: "$factureDetails.status",
+                    service: "$factureDetails.services",
+                    mecanicienDetails: {
+                        _id: 1,
+                        nom: 1,
+                        prenom: 1,
+                        photo: 1
+                    },
+                    clientDetails: {
+                        _id: 1,
+                        prenom: 1
+                    }
+                }
+            }
+        ]);
+    } catch (err) {
+        error = err.message;
+        status = 400
+    }
+    return {
+        "status": status,
+        "error": error,
+        "task": tasks
+    }
+}
 
 async function ValiderFacture(iddemande, infoFact, user) {
     let status = 201;
@@ -34,30 +205,31 @@ function getDetailsHTML(items) {
         data += `
         <div class="table-row">
             <div class=" table-cell w-6/12 text-left font-bold py-1 px-4">${item.nom}</div>
-            <div class=" table-cell w-2/12 text-center">₹${item.tarif}</div>
+            <div class=" table-cell w-2/12 text-center">${item.tarif} Ar</div>
         </div>
         `
     }
     return data
 }
 
-async function getFacturesSelonClient( user) {
+async function getFacturesSelonClient(user) {
     let status = 201;
     let error = '';
     let listeFacture = [];
     try {
         listeFacture = await Facture.find({ idClient: user.id }).sort({ datefact: -1 });
-        
+
     } catch (err) {
         error = err.message;
         status = 400
     }
     return {
         "status": status,
-        "error": error ,
-        "listeFacture" : listeFacture
+        "error": error,
+        "listeFacture": listeFacture
     }
 }
+
 function getFactureHTML(fact) {
     return `
 <!DOCTYPE html>
@@ -102,9 +274,9 @@ function getFactureHTML(fact) {
                         <p class="font-bold text-xl py-1 pb-2 ">Total:</p>
                     </div>
                     <div class="flex flex-col items-end w-[12rem] text-right">
-                        <p class="py-1">${fact.datefact}</p>
+                        <p class="py-1">${dayjs(fact.datefact).format('DD/MM/YY à HH:mm')}</p>
                         <div class="pb-2 py-1">
-                            <p class="font-bold text-xl">₹${fact.total}</p>
+                            <p class="font-bold text-xl">${fact.total} Ar</p>
                         </div>
                     </div>
                 </div>
@@ -120,14 +292,14 @@ function getFactureHTML(fact) {
                 </div>
             </div>
             <div class="table-row-group">
-            ${getDetailsHTML(fact.service)}
+            ${getDetailsHTML(fact.services)}
             ${getDetailsHTML(fact.pack)}
             </div>
         </div>
         
         <!--Total Amount-->
         <div class=" pt-20 pr-10 text-right">
-            <p class="text-gray-400">Total: <span class="pl-24 text-black">₹${fact.total}</span></p>
+            <p class="text-gray-400">Total: <span class="pl-24 text-black">${fact.total} Ar</span></p>
         </div>
         <!--Notes and Other info-->
         <div class="py-6">
@@ -143,10 +315,20 @@ function getFactureHTML(fact) {
 async function getFacture(id) {
     return new Promise(async (resolve, reject) => {
         try {
-            const fact = null; //get details fact
-            const html = getFactureHTML(fact)
+            const fact = await Facture.aggregate([
+                { $match: { _id: Number(id) } },
+                {
+                    $lookup: {
+                        from: "clients",
+                        localField: "idClient",
+                        foreignField: "_id",
+                        as: "client"
+                    }
+                },
+                { $unwind: "$client" },
+            ]);
+            const html = getFactureHTML(fact[0])
             const htmlToPDF = new HTMLToPDF(html)
-
             const pdf = await htmlToPDF.convert({ waitForNetworkIdle: true, browserOptions: { defaultViewport: { width: 1920, height: 1080 } }, pdfOptions: { height: 1200, width: 900, timeout: 0 } })
             resolve(pdf)
         } catch (err) {
@@ -156,5 +338,5 @@ async function getFacture(id) {
 }
 
 module.exports = {
-    getFacture, ValiderFacture , getFacturesSelonClient
+    getFacture, ValiderFacture, getFacturesSelonClient, ListeTacheEnCours, ListeFacture
 }

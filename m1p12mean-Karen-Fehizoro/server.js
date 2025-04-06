@@ -47,7 +47,7 @@ app.use('/managers', require('./routes/managerRoutes'));
 app.use('/services', require('./routes/serviceRoutes'));
 app.use('/packPromoServices', require('./routes/packPromoServiceRoutes'));
 app.use('/mecanicien', require('./routes/mecanicienRoutes'));
-app.use('/tacheMecanicien', require('./routes/tacheMecanicienRoutes'));
+app.use('/tacheMecanicien',authenticateToken, require('./routes/tacheMecanicienRoutes'));
 app.use('/depenseExceptionnelle', require('./routes/depenseExceptionnelle'));
 app.use('/recetteExceptionnelle', require('./routes/recetteExceptionnelle'));
 app.use('/notif', require('./routes/NotifRoutes'));
