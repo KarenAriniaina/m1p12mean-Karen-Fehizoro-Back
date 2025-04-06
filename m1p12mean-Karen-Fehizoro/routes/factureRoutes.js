@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Facture = require('../models/Facture');
-const { ValiderFacture, getFacturesSelonClient, ListeFacture } = require('../services/facturation');
+const { ValiderFacture, getFacturesSelonClient, ListeFacture, getFacture } = require('../services/facturation');
 
 router.post('/', async (req, res) => {
     const { iddemande, infoFact } = req.body;
@@ -61,5 +61,17 @@ router.get('/test', async (req, res) => {
     }
 });
 
+router.get("/facture-pdf/:id", (req, res) => {
+    const idfact = req.params.id;
+    getFacture(idfact).then(pdf => {
+        res.status(200)
+        res.contentType("application/pdf");
+        res.setHeader('Content-Disposition', 'attachment; filename="facture_' + idfact + '.pdf"');
+        res.send(pdf);
+    }).catch(err => {
+        console.error(err)
+        res.status(500).send({ success: false, error: "Une erreur s'est produite" })
+    })
+})
 
 module.exports = router;

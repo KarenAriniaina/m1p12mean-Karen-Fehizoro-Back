@@ -3,6 +3,7 @@ const Facture = require('../models/Facture');
 const TacheMecanicien = require('../models/TacheMecanicien');
 
 const HTMLToPDF = require('convert-html-to-pdf').default;
+const dayjs = require('dayjs');
 
 async function ListeFacture(fact, dd, df) {
     let status = 200; let error = ''; let lfact = [];
@@ -204,7 +205,7 @@ function getDetailsHTML(items) {
         data += `
         <div class="table-row">
             <div class=" table-cell w-6/12 text-left font-bold py-1 px-4">${item.nom}</div>
-            <div class=" table-cell w-2/12 text-center">₹${item.tarif}</div>
+            <div class=" table-cell w-2/12 text-center">${item.tarif} Ar</div>
         </div>
         `
     }
@@ -273,9 +274,9 @@ function getFactureHTML(fact) {
                         <p class="font-bold text-xl py-1 pb-2 ">Total:</p>
                     </div>
                     <div class="flex flex-col items-end w-[12rem] text-right">
-                        <p class="py-1">${fact.datefact}</p>
+                        <p class="py-1">${dayjs(fact.datefact).format('DD/MM/YY à HH:mm')}</p>
                         <div class="pb-2 py-1">
-                            <p class="font-bold text-xl">₹${fact.total}</p>
+                            <p class="font-bold text-xl">${fact.total} Ar</p>
                         </div>
                     </div>
                 </div>
@@ -298,7 +299,7 @@ function getFactureHTML(fact) {
         
         <!--Total Amount-->
         <div class=" pt-20 pr-10 text-right">
-            <p class="text-gray-400">Total: <span class="pl-24 text-black">₹${fact.total}</span></p>
+            <p class="text-gray-400">Total: <span class="pl-24 text-black">${fact.total} Ar</span></p>
         </div>
         <!--Notes and Other info-->
         <div class="py-6">
@@ -315,8 +316,7 @@ async function getFacture(id) {
     return new Promise(async (resolve, reject) => {
         try {
             const fact = await Facture.aggregate([
-                { $match: { _id: id } },
-                { $limit: 1 },  // Ensures only 1 result is returned
+                { $match: { _id: Number(id) } },
                 {
                     $lookup: {
                         from: "clients",
@@ -327,7 +327,7 @@ async function getFacture(id) {
                 },
                 { $unwind: "$client" },
             ]);
-            const html = getFactureHTML(fact)
+            const html = getFactureHTML(fact[0])
             const htmlToPDF = new HTMLToPDF(html)
             const pdf = await htmlToPDF.convert({ waitForNetworkIdle: true, browserOptions: { defaultViewport: { width: 1920, height: 1080 } }, pdfOptions: { height: 1200, width: 900, timeout: 0 } })
             resolve(pdf)
