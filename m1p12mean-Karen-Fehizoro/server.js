@@ -56,4 +56,5 @@ app.use('/ca', require('./routes/CaRoutes'));
 app.use('/testProposition', require('./routes/testProposition'));
 app.use('/heureDeTravail', require('./routes/heureDeTravail'));
 app.use('/facture',authenticateToken, require('./routes/factureRoutes'));
+app.use('/rechercheGlobal', require('./routes/rechercherGlobalRoute'));
 app.listen(PORT, () => console.log(`Serveur démarré sur le port${PORT}`));
